@@ -1,0 +1,137 @@
+using NINA.Core.Utility;
+using System;
+using System.ComponentModel;
+using System.IO.Ports;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using NINA.Profile.Interfaces;
+
+namespace NINA.Plugins.PolarAlignment.MLAstroRPA
+{
+    public partial class UniversalPolarAlignmentMLAstroRPAVM : UniversalPolarAlignmentBaseVM, INotifyPropertyChanged
+    {
+        private string testConnectStatus;
+        public override string TestConnectStatus
+        {
+            get => testConnectStatus;
+            protected set { testConnectStatus = value; OnPropertyChanged(nameof(TestConnectStatus)); }
+        }
+
+        private readonly NINA.Core.Utility.RelayCommand testConnectCommand;
+        public override NINA.Core.Utility.RelayCommand TestConnectCommand => testConnectCommand;
+        public bool IsMLAstroRPASelected => SystemName == "MLAstroRPA";
+
+        public UniversalPolarAlignmentMLAstroRPAVM(IProfileService profileService) : base(profileService)
+        {
+            testConnectCommand = new RelayCommand(_ => _ = TestConnectAsync());
+        }
+ 
+        protected override IPolarAlignmentSystem CreateSystem() => new UniversalPolarAlignmentMLAstroRPA();
+        protected override string SystemName => "MLAstroRPA";
+
+        public override bool DoAutomatedAdjustments {
+            get => Properties.Settings.Default.DoAutomatedAdjustments;
+            set {
+                Properties.Settings.Default.DoAutomatedAdjustments = value;
+                CoreUtil.SaveSettings(Properties.Settings.Default);
+                RaisePropertyChanged();
+            }
+        }
+
+        public override double AutomatedAdjustmentSettleTime {
+            get => Properties.Settings.Default.AutomatedAdjustmentSettleTime;
+            set {
+                Properties.Settings.Default.AutomatedAdjustmentSettleTime = value;
+                CoreUtil.SaveSettings(Properties.Settings.Default);
+                RaisePropertyChanged();
+            }
+        }
+
+        public override float XGearRatio { get => 1f; set { } }
+        public override int XSpeed { get => 1; set { } }
+        public override float YGearRatio { get => 1f; set { } }
+        public override int YSpeed { get => 1; set { } }
+        public override bool ReverseAzimuth { get => false; set { } }
+        public override bool ReverseAltitude { get => false; set { } }
+        public override float XBacklashCompensation { get => 0f; set { } }
+
+        private async Task TestConnectAsync()
+        {
+            Logger.Info($"[MLAstroRPA-TestConnect] CLICKED {DateTime.Now:HH:mm:ss.fff}");
+
+            var ports = SerialPort.GetPortNames().OrderBy(p => p).ToArray();
+            var portsText = ports.Length == 0 ? "<none>" : string.Join(",", ports);
+            Logger.Info($"[MLAstroRPA-TestConnect] Available ports: {portsText}");
+
+            if (ports.Length == 0)
+            {
+                TestConnectStatus = "No COM ports found.";
+                Logger.Error("[MLAstroRPA-TestConnect] No COM ports found.");
+                return;
+            }
+
+            foreach (var comPort in ports)
+            {
+                TestConnectStatus = $"[DEBUG] Checking {comPort}... {DateTime.Now:HH:mm:ss.fff}";
+                Logger.Info($"[MLAstroRPA-TestConnect] Checking {comPort}... {DateTime.Now:HH:mm:ss.fff}");
+
+                using var port = new SerialPort(comPort, 115200, Parity.None, 8, StopBits.One)
+                {
+                    NewLine = "\n",
+                    Handshake = Handshake.None,
+                    DtrEnable = true,
+                    RtsEnable = true,
+                    ReadTimeout = 1000,
+                    WriteTimeout = 1000
+                };
+
+                try
+                {
+                    port.Open();
+                    await Task.Delay(100);
+                    port.DiscardInBuffer();
+
+                    Logger.Info($"[MLAstroRPA-TestConnect] Opened {comPort} (115200 8N1) {DateTime.Now:HH:mm:ss.fff}");
+
+                    port.WriteLine("[MLAstroRPA-TC]");
+                    var ack = port.ReadLine()?.Trim();
+                    Logger.Info($"[MLAstroRPA-TestConnect] {comPort} handshake response: {ack}");
+
+                    if (!string.Equals(ack, "ok", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    port.WriteLine("?");
+                    var status = port.ReadLine()?.Trim();
+                    Logger.Info($"[MLAstroRPA-TestConnect] {comPort} status response: {status}");
+
+                    if (!string.IsNullOrWhiteSpace(status) && StatusRegex().IsMatch(status))
+                    {
+                        TestConnectStatus = $"MLAstroRPA detected on {comPort}. Status: {status}";
+                        Logger.Info($"[MLAstroRPA-TestConnect] MLAstroRPA detected on {comPort}. Status: {status}");
+                        return;
+                    }
+
+                    TestConnectStatus = $"Handshake succeeded on {comPort}, but the status response was invalid.";
+                    Logger.Error($"[MLAstroRPA-TestConnect] Handshake succeeded on {comPort}, but the status response was invalid: {status}");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"[MLAstroRPA-TestConnect] {comPort} failed: {ex.Message}");
+                }
+                finally 
+                {
+                    if (port.IsOpen) port.Close();
+                }
+            }
+
+            TestConnectStatus = $"MLAstroRPA was not detected on any COM port. Scanned: {portsText}";
+            Logger.Error($"[MLAstroRPA-TestConnect] MLAstroRPA was not detected on any COM port. Scanned: {portsText}");
+        }
+
+        [GeneratedRegex(@"<(?<status>[^|>]+)\|M[Pp]os:(?<x>[+-]?\d+(\.\d+)?),(?<y>[+-]?\d+(\.\d+)?)(,(?<z>[+-]?\d+(\.\d+)?))?\|")]
+        private static partial Regex StatusRegex();
+    }
+}

@@ -6,7 +6,8 @@ namespace NINA.Plugins.PolarAlignment {
     public enum PolarAlignmentSystemType {
         None,
         UPAS,
-        OAPA
+        OAPA,
+        MLAstroRPA
     }
 
     public enum Axis {
