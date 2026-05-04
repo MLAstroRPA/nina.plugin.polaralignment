@@ -33,8 +33,10 @@
 - Hid manual hardware controls while automated adjustments are active.
 - Corrected the polar-alignment log path documentation.
 
++ Add MLastroRPA system
+
 ## Version 2.2.5.0
-- Replaced AAPA/Avalon checkboxes with a single ComboBox selector (None / UPAS / AAPA) per code review feedback
+- Replaced OAPA/Avalon checkboxes with a single ComboBox selector (None / UPAS / OAPA) per code review feedback
 - Common settings (reverse axes, backlash, automated adjustments) now displayed based on the selected system
 - Eliminated code duplication by extracting shared base classes and interfaces for polar alignment systems
 - Removed redundant UsePolarAlignmentSystem boolean in favor of enum-based selection

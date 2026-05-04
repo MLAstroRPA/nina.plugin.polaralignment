@@ -4,27 +4,45 @@ using System.Globalization;
 using System.IO.Ports;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
+using System.Threading.Tasks; 
 
 namespace NINA.Plugins.PolarAlignment {
     public abstract partial class UniversalPolarAlignmentBase : IPolarAlignmentSystem {
-        private readonly SerialPort port;
+        private readonly SerialPort port; 
 
         protected abstract string SystemName { get; }
         protected virtual string NewLineSequence => "\n";
         protected virtual int ScanReadTimeout => 1000;
         protected virtual int ScanWriteTimeout => 1000;
         protected virtual bool ClearBufferOnConnect => false;
+        protected virtual string StatusQueryCommand => "?";
+        protected virtual int StatusResponseLineCount => 2;
 
         protected abstract Regex GetStatusRegex();
 
         protected SerialPort Port => port;
 
+<<<<<<< HEAD
         private const float TargetPositionTolerance = 0.01f;
         private const double MovementTimeoutFactor = 2d;
         private static readonly TimeSpan MinimumMovementTimeout = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan MovementTimeoutGracePeriod = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan FallbackMovementTimeout = TimeSpan.FromSeconds(30);
+=======
+        protected virtual void OnPortOpened(SerialPort serialPort) { }
+
+        protected virtual bool IsStatusResponseValid(string status) {
+            return GetStatusRegex().Match(status).Success;
+        }
+
+        protected string ReadStatusResponse(SerialPort serialPort) {
+            var status = serialPort.ReadLine();
+            for (int i = 1; i < StatusResponseLineCount; i++) {
+                _ = serialPort.ReadLine();
+            }
+            return status;
+        }
+>>>>>>> 8b3ee36 (feat: Add MLastroRPA system)
 
         protected UniversalPolarAlignmentBase() {
             var comPorts = SerialPort.GetPortNames();
@@ -49,10 +67,18 @@ namespace NINA.Plugins.PolarAlignment {
                             serialPortToTest.DiscardInBuffer();
                         }
 
+<<<<<<< HEAD
                         serialPortToTest.WriteLine("?");
                         var status = ReadStatusLine(serialPortToTest);
                         var match = GetStatusRegex().Match(status);
                         if (match.Success) {
+=======
+                        OnPortOpened(serialPortToTest);
+
+                        serialPortToTest.WriteLine(StatusQueryCommand);
+                        var status = ReadStatusResponse(serialPortToTest);
+                        if (IsStatusResponseValid(status)) {
+>>>>>>> 8b3ee36 (feat: Add MLastroRPA system)
                             port = serialPortToTest;
                             Logger.Info($"Found {SystemName} on {comPort}");
                             break;
@@ -74,15 +100,15 @@ namespace NINA.Plugins.PolarAlignment {
         }
 
         public bool Connected => port.IsOpen;
-        public string Status { get; private set; }
+        public string Status { get; protected set; }
 
-        private float XPosition { get; set; }
-        private float YPosition { get; set; }
-        private float ZPosition { get; set; }
+        protected float XPosition { get; private set; }
+        protected float YPosition { get; private set; }
+        protected float ZPosition { get; private set; }
 
-        public LastDirection XLastDirection { get; private set; } = LastDirection.Positive;
-        public LastDirection YLastDirection { get; private set; } = LastDirection.Positive;
-        public LastDirection ZLastDirection { get; private set; } = LastDirection.Positive;
+        public LastDirection XLastDirection { get; protected set; } = LastDirection.Positive;
+        public LastDirection YLastDirection { get; protected set; } = LastDirection.Positive;
+        public LastDirection ZLastDirection { get; protected set; } = LastDirection.Positive;
 
         public float XPosition1 { get => XPosition / XGearRatio; }
         public float YPosition1 { get => YPosition / YGearRatio; }
@@ -92,9 +118,27 @@ namespace NINA.Plugins.PolarAlignment {
         public abstract float YGearRatio { get; set; }
         public float ZGearRatio { get; set; } = 1;
 
-        private SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+        protected readonly SemaphoreSlim semaphore = new(1, 1);
 
-        public async Task MoveRelative(Axis axis, int speed, float position, CancellationToken token) {
+        protected bool TryApplyStatusLine(string statusLine) {
+            var match = GetStatusRegex().Match(statusLine);
+            if (!match.Success) {
+                return false;
+            }
+
+            Status = match.Groups["status"].Value;
+            XPosition = float.Parse(match.Groups["x"].Value, CultureInfo.InvariantCulture);
+            YPosition = float.Parse(match.Groups["y"].Value, CultureInfo.InvariantCulture);
+
+            var zGroup = match.Groups["z"];
+            ZPosition = (zGroup.Success && !string.IsNullOrWhiteSpace(zGroup.Value))
+                ? float.Parse(zGroup.Value, CultureInfo.InvariantCulture)
+                : 0f;
+
+            return true;
+        }
+
+        public virtual async Task MoveRelative(Axis axis, int speed, float position, CancellationToken token) {
             await semaphore.WaitAsync(token);
             try {
                 UpdateStatus();
@@ -163,7 +207,7 @@ namespace NINA.Plugins.PolarAlignment {
             }
         }
 
-        public async Task MoveAbsolute(Axis axis, int speed, float position, CancellationToken token) {
+        public virtual async Task MoveAbsolute(Axis axis, int speed, float position, CancellationToken token) {
             await semaphore.WaitAsync(token);
             try {
                 UpdateStatus();
@@ -232,6 +276,7 @@ namespace NINA.Plugins.PolarAlignment {
             }
         }
 
+<<<<<<< HEAD
         internal static TimeSpan CalculateMovementTimeout(float startPosition, float targetPosition, int speed) {
             var distance = Math.Abs(targetPosition - startPosition);
             if (distance <= TargetPositionTolerance) {
@@ -249,14 +294,13 @@ namespace NINA.Plugins.PolarAlignment {
         private void UpdateStatus() {
             port.WriteLine("?");
             var status = ReadStatusLine(port);
+=======
+        protected virtual void UpdateStatus() {
+            port.WriteLine(StatusQueryCommand);
+            var status = ReadStatusResponse(port);
+>>>>>>> 8b3ee36 (feat: Add MLastroRPA system)
 
-            var match = GetStatusRegex().Match(status);
-            if (match.Success) {
-                Status = match.Groups["status"].Value;
-                XPosition = float.Parse(match.Groups["x"].Value, CultureInfo.InvariantCulture);
-                YPosition = float.Parse(match.Groups["y"].Value, CultureInfo.InvariantCulture);
-                ZPosition = float.Parse(match.Groups["z"].Value, CultureInfo.InvariantCulture);
-            } else {
+            if (!TryApplyStatusLine(status)) {
                 Logger.Error($"Failed to parse {SystemName} status: {status}");
             }
         }

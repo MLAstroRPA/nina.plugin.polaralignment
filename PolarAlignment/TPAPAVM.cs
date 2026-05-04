@@ -12,6 +12,7 @@ using NINA.Image.Interfaces;
 using NINA.PlateSolving;
 using NINA.Plugins.PolarAlignment.Avalon;
 using NINA.Plugins.PolarAlignment.OAPA;
+using NINA.Plugins.PolarAlignment.MLAstroRPA;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.Behaviors;
 using Serilog;
@@ -61,6 +62,7 @@ namespace NINA.Plugins.PolarAlignment {
 
         public UniversalPolarAlignmentVM UniversalPolarAlignmentVM => PolarAlignmentPlugin.UniversalPolarAlignmentVM;
         public UniversalPolarAlignmentOAPAVM UniversalPolarAlignmentOAPAVM => PolarAlignmentPlugin.UniversalPolarAlignmentOAPAVM;
+        public UniversalPolarAlignmentMLAstroRPAVM UniversalPolarAlignmentMLAstroRPAVM => PolarAlignmentPlugin.UniversalPolarAlignmentMLAstroRPAVM;
         public IPolarAlignmentSystemVM ActiveAlignmentSystemVM => PolarAlignmentPlugin.ActiveAlignmentSystemVM;
         public bool UseContinuousErrorEstimator => Properties.Settings.Default.UseContinuousErrorEstimator;
 
@@ -787,8 +789,11 @@ namespace NINA.Plugins.PolarAlignment {
 
 
     public class PolarErrorDetermination : BaseINPC {
+<<<<<<< HEAD
         private const double EastWestWarningThresholdDegrees = 5.0;
 
+=======
+>>>>>>> 8b3ee36 (feat: Add MLastroRPA system)
         public PolarErrorDetermination(PlateSolveResult referenceFrame, Position position1, Position position2, Position position3, Angle latitude, Angle longitude, double elevation, RefractionParameters refractionParameters, bool correctForRefraction, double declinationSpreadArcsec = 0) {
             Latitude = latitude;
             Longitude = longitude;
