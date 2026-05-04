@@ -35,6 +35,9 @@ namespace NINA.Plugins.PolarAlignment {
         [ObservableProperty]
         private float targetPositionY;
 
+        public virtual string TestConnectStatus { get; protected set; } = string.Empty;
+        public virtual NINA.Core.Utility.RelayCommand TestConnectCommand => null;
+
         public abstract bool DoAutomatedAdjustments { get; set; }
         public abstract double AutomatedAdjustmentSettleTime { get; set; }
         public abstract float XGearRatio { get; set; }

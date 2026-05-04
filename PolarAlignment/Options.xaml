@@ -307,6 +307,7 @@
                             <local:PolarAlignmentSystemType>None</local:PolarAlignmentSystemType>
                             <local:PolarAlignmentSystemType>UPAS</local:PolarAlignmentSystemType>
                             <local:PolarAlignmentSystemType>OAPA</local:PolarAlignmentSystemType>
+                            <local:PolarAlignmentSystemType>MLAstroRPA</local:PolarAlignmentSystemType>
                         </x:Array>
                     </ComboBox.ItemsSource>
                 </ComboBox>
@@ -462,6 +463,32 @@
                         <Button Command="{Binding DisconnectCommand}" Visibility="{Binding Connected, Converter={StaticResource BooleanToVisibilityConverter}}">Disconnect</Button>
                     </Grid>
                     <ContentPresenter Grid.Row="1" Content="{Binding UniversalPolarAlignmentOAPAVM}" />
+                </Grid>
+            </GroupBox>
+            <GroupBox
+                Grid.Row="3"
+                Margin="0,10,0,0"
+                Header="MLAstro Robotic Polar Alignment System"
+                Visibility="{Binding IsMLAstroRPASelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid Margin="0,10,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid DataContext="{Binding UniversalPolarAlignmentMLAstroRPAVM}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Button Command="{Binding ConnectCommand}" Visibility="{Binding Connected, Converter={StaticResource InverseBooleanToVisibilityCollapsedConverter}}">Test Connect</Button>
+                        <Button Command="{Binding DisconnectCommand}" Visibility="{Binding Connected, Converter={StaticResource BooleanToVisibilityConverter}}">Disconnect</Button>
+                    </Grid>
+                    <TextBlock
+                        Grid.Row="1"
+                        Margin="0,8,0,0"
+                        Foreground="Green"
+                        TextWrapping="Wrap"
+                        Text="{Binding UniversalPolarAlignmentMLAstroRPAVM.TestConnectStatus}" />
                 </Grid>
             </GroupBox>
 
