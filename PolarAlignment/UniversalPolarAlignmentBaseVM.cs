@@ -185,6 +185,17 @@ namespace NINA.Plugins.PolarAlignment {
             }
         }
 
+        [RelayCommand]
+        public virtual async Task Abort(CancellationToken token) {
+            try {
+                if (upa?.Connected == true) {
+                    await upa.Abort(token).ConfigureAwait(false);
+                }
+            } catch (Exception ex) {
+                Logger.Error(ex);
+            }
+        }
+
         private async Task StartPoll() {
             pollCts = new CancellationTokenSource();
             var token = pollCts.Token;

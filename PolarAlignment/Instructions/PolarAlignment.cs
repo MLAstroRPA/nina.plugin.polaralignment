@@ -369,6 +369,12 @@ namespace NINA.Plugins.PolarAlignment.Instructions {
         }
 
         public void Pause() {
+            try {
+                _ = PolarAlignmentPlugin.ActiveAlignmentSystemVM?.Abort(CancellationToken.None);
+            } catch (Exception ex) {
+                Logger.Error(ex);
+            }
+
             if (pauseTS != null) {
                 pauseTS.IsPaused = true;
                 RaisePropertyChanged(nameof(IsPaused));

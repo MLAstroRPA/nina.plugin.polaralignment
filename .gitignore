@@ -94,3 +94,4 @@ orleans.codegen.cs
 
 # Firmware (managed separately)
 firmware/
+/PolarAlignment/MLAstroRPA/protocol.md
