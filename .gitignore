@@ -94,6 +94,10 @@ orleans.codegen.cs
 
 # Firmware (managed separately)
 firmware/
+<<<<<<< HEAD
 /.dotnet-cli
 /.oracle-venv
 /.oracle-deps
+=======
+/PolarAlignment/MLAstroRPA/protocol.md
+>>>>>>> 3540e0e (Add Abort support to polar alignment system and VM)
