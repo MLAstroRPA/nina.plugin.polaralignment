@@ -77,7 +77,10 @@ namespace NINA.Plugins.PolarAlignment.Dockables {
 
             PauseCommand = new RelayCommand(Pause, (object o) => !PolarAlignment.IsPausing);
             ResumeCommand = new RelayCommand(Resume);
-            CancelExecuteCommand = new RelayCommand((object o) => { try { executeCTS?.Cancel(); } catch (Exception) { } });
+            CancelExecuteCommand = new RelayCommand((object o) => {
+                try { _ = PolarAlignmentPlugin.ActiveAlignmentSystemVM?.Abort(CancellationToken.None); } catch (Exception) { }
+                try { executeCTS?.Cancel(); } catch (Exception) { }
+            });
             
             messageBroker.Subscribe(StartAlignmentTopic, this);
             messageBroker.Subscribe(StopAlignmentTopic, this);
@@ -85,6 +88,7 @@ namespace NINA.Plugins.PolarAlignment.Dockables {
         
 
         private void Pause(object obj) {
+            try { _ = PolarAlignmentPlugin.ActiveAlignmentSystemVM?.Abort(CancellationToken.None); } catch (Exception) { }
             PolarAlignment.Pause();
         }
 
@@ -265,6 +269,7 @@ namespace NINA.Plugins.PolarAlignment.Dockables {
             } else if (message.Topic == StopAlignmentTopic) {
                 try {
                     Logger.Info("Received message to stop polar alignment");
+                    _ = PolarAlignmentPlugin.ActiveAlignmentSystemVM?.Abort(CancellationToken.None);
                     executeCTS?.Cancel();
                 } catch {}
             }

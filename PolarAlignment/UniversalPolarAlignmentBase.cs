@@ -325,6 +325,10 @@ namespace NINA.Plugins.PolarAlignment {
             }
         }
 
+        public virtual Task Abort(CancellationToken token) {
+            return Task.CompletedTask;
+        }
+
         public void Dispose() => port?.Dispose();
     }
 }

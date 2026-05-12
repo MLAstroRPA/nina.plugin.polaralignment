@@ -90,6 +90,31 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
             Logger.Info($"[MLAstroRPA] Align completed with status: {finalStatus}");
         }
 
+        public override async Task Abort(CancellationToken token) {
+            await semaphore.WaitAsync(token);
+            try {
+                Logger.Info("[MLAstroRPA] Sending abort command: STOP:1");
+                Port.WriteLine("STOP:1");
+
+                string response = string.Empty;
+                try {
+                    response = Port.ReadLine()?.Trim() ?? string.Empty;
+                } catch {
+                }
+
+                TaskCompletionSource<string> completionSource;
+                lock (alignmentSync) {
+                    completionSource = alignmentCompletionSource;
+                    alignmentCompletionSource = null;
+                }
+
+                completionSource?.TrySetException(new OperationCanceledException("Alignment aborted by user."));
+                Logger.Info($"[MLAstroRPA] Abort command sent. Response: {response}");
+            } finally {
+                semaphore.Release();
+            }
+        }
+
         protected override void UpdateStatus() {
             Port.WriteLine(StatusQueryCommand);
             var line = ReadStatusResponse(Port)?.Trim();
