@@ -75,17 +75,43 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
 
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
             var timeoutTask = Task.Delay(TimeSpan.FromSeconds(90), timeoutCts.Token);
+
+            // Poll "?" periodically until the device reports READY or ALIGN_COMPLETED
+            var pollingTask = Task.Run(async () => {
+                while (!completionSource.Task.IsCompleted) {
+                    try {
+                        await semaphore.WaitAsync(timeoutCts.Token);
+                        try {
+                            Port.WriteLine(StatusQueryCommand);
+                            var line = ReadStatusResponse(Port)?.Trim();
+                            Logger.Info($"[MLAstroRPA] Poll status: {line}");
+                            if (!string.IsNullOrWhiteSpace(line)) {
+                                UpdateStatusFromLine(line);
+                            }
+                        } finally {
+                            semaphore.Release();
+                        }
+                    } catch (OperationCanceledException) {
+                        break;
+                    } catch (Exception ex) {
+                        Logger.Error($"[MLAstroRPA] Poll error: {ex.Message}");
+                    }
+                    await Task.Delay(300, timeoutCts.Token).ContinueWith(_ => { });
+                }
+            }, timeoutCts.Token);
+
             var finishedTask = await Task.WhenAny(completionSource.Task, timeoutTask);
 
             lock (alignmentSync) {
                 alignmentCompletionSource = null;
             }
+            timeoutCts.Cancel();
+            await pollingTask.ContinueWith(_ => { });
 
             if (finishedTask == timeoutTask) {
                 throw new TimeoutException("Timeout waiting MLAstroRPA alignment completion from RefreshStatus telemetry.");
             }
 
-            timeoutCts.Cancel();
             var finalStatus = await completionSource.Task;
             Logger.Info($"[MLAstroRPA] Align completed with status: {finalStatus}");
         }
@@ -118,10 +144,12 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
         protected override void UpdateStatus() {
             Port.WriteLine(StatusQueryCommand);
             var line = ReadStatusResponse(Port)?.Trim();
-            if (string.IsNullOrWhiteSpace(line)) {
-                return;
+            if (!string.IsNullOrWhiteSpace(line)) {
+                UpdateStatusFromLine(line);
             }
+        }
 
+        private void UpdateStatusFromLine(string line) {
             if (!TryApplyStatusLine(line)) {
                 Logger.Error($"Failed to parse {SystemName} status: {line}");
                 return;
