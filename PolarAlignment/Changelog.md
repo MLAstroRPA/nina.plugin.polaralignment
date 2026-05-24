@@ -8,6 +8,15 @@
 - On TPPA Pause/Stop/Cancel, the active alignment system now receives an abort request.
 - MLAstroRPA abort now sends `STOP:1` over serial.
 
+- Refactored `UniversalPolarAlignmentBase` for extensibility and compatibility across systems:
+  - Extracted status parsing into `TryApplyStatusLine(...)` with safe optional `z` handling.
+  - Made `MoveRelative(...)`, `MoveAbsolute(...)`, and `UpdateStatus()` virtual to allow system-specific protocol overrides.
+  - Generalized status polling via `StatusQueryCommand` and `ReadStatusResponse(...)` instead of fixed `?` + fixed line reads.
+  - Added default no-op `Abort(...)` in base system to preserve backward compatibility for UPAS/OAPA.
+- Extended `UniversalPolarAlignmentBaseVM` shared contract:
+  - Added optional `TestConnectStatus` and `TestConnectCommand` properties for per-system test-connect UI.
+  - Added VM-level `Abort(...)` command forwarding to the active system implementation.
+
 ## Version 2.2.5.0
 - Replaced OAPA/Avalon checkboxes with a single ComboBox selector (None / UPAS / OAPA) per code review feedback
 - Common settings (reverse axes, backlash, automated adjustments) now displayed based on the selected system
