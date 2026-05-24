@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 2.2.6.2-MLAstroRPA
+## Unreleased (MLAstroRPA-Base-v2.2.6.2 branch)
 
 ### MLAstroRPA system integration
 - Added `MLAstroRPA` as a new polar alignment system option alongside None / UPAS / OAPA in the plugin settings ComboBox.
