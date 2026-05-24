@@ -1,5 +1,6 @@
 # Changelog
 
+<<<<<<< HEAD
 ## Version 2.2.6.7
 - Fixed UPAS azimuth backlash compensation.
 
@@ -16,6 +17,9 @@
 - Improved correction-loop performance by avoiding star detection until a reference star is manually selected, then projecting that locked star between frames and re-detecting only after 120 seconds, a field shift over 0.5 degrees, or an outside-image projection.
 
 ## Version 2.2.6.2-MLAstroRPA
+=======
+## Unreleased (MLAstroRPA-Base-v2.2.6.2 branch)
+>>>>>>> e3f85d2 (Update changelog.md for MLAstroRPA system)
 
 ### MLAstroRPA system integration
 - Added `MLAstroRPA` as a new polar alignment system option alongside None / UPAS / OAPA in the plugin settings ComboBox.
@@ -131,13 +135,8 @@
 - Observer elevation is now considered for all transformations
 
 ## Version 2.1.0.2
-- Fixed an issue when using the UPA that the direction would constantly be reversed on each adjustment.
 - When using the UPA it will no longer move a last time without re-evaluation when the alignment threshold has already been reached.
-- Added options for UPA to reverse azimuth and altitude axes
-
-## Version 2.1.0.1
 - Polar Alignment Tolerance can now be set on instruction level. For example when you are running an automated polar alignment run and want to dial in the polar alignment in multiple phases and getting more precise in each step.
-- Now showing UPA positions in automatic mode in addition to the already existing nudge direction
 
 ## Version 2.1.0.0
 - The position angle spread between the three measurements is now measured. If it is too large, a warning will be shown.
