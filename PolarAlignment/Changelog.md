@@ -1,6 +1,12 @@
 ﻿# Changelog
 
-+ Add MLastroRPA system
+## Unreleased (MLAstroRPA branch)
+- Added new `MLAstroRPA` polar alignment system integration.
+- Added `MLAstroRPA` to the system selector (None / UPAS / OAPA / MLAstroRPA).
+- Added test-connect workflow for MLAstroRPA with COM auto-detection and detected-port status reporting.
+- Added abort support to polar alignment system/VM contracts.
+- On TPPA Pause/Stop/Cancel, the active alignment system now receives an abort request.
+- MLAstroRPA abort now sends `STOP:1` over serial.
 
 ## Version 2.2.5.0
 - Replaced OAPA/Avalon checkboxes with a single ComboBox selector (None / UPAS / OAPA) per code review feedback
