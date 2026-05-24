@@ -1,5 +1,40 @@
 # Changelog
 
+## Version 2.2.6.2-MLAstroRPA
+
+### MLAstroRPA system integration
+- Added `MLAstroRPA` as a new polar alignment system option alongside None / UPAS / OAPA in the plugin settings ComboBox.
+- Added `UniversalPolarAlignmentMLAstroRPA` — a dedicated driver for the MLAstro Robotic Polar Alignment hardware communicating over serial (USB/WiFi bridge).
+- Added `UniversalPolarAlignmentMLAstroRPAVM` — the ViewModel layer for the MLAstroRPA system, wired into the options panel with Connect / Disconnect controls and a live status text field.
+- Added `MLAstroRPA GroupBox` in the Settings tab of the options panel, visible only when MLAstroRPA is the selected system.
+- Added protocol documentation at `PolarAlignment/MLAstroRPA/protocol.md` describing the serial command set.
+
+### MLAstroRPA driver details (`UniversalPolarAlignmentMLAstroRPA`)
+- Performs a handshake on connect by sending `[MLAstroRPA-TC]` and verifying the device replies `ok` before accepting the port.
+- Clears the serial input buffer after opening the port to avoid stale data.
+- Translates TPPA arc-minute correction values into the device's DMS (degrees / minutes / seconds / direction) format before sending.
+- Sends a structured align command (`AzED/AzEM/AzES/AzDi/AlED/AlEM/AlES/AlDi/AAll`) and waits for an `ok` acknowledgement.
+- After sending the align command, starts an internal polling loop that queries `?` every 300 ms and parses the status response to detect `READY` or `ALIGN_COMPLETED`, then signals completion automatically.
+- Supports `Abort` by sending `STOP:1` and immediately cancelling any in-progress alignment `TaskCompletionSource`.
+- Overrides `MoveAbsolute` to calculate the delta from the current position and delegate to `MoveRelative`.
+- Parses device telemetry with a dedicated regex matching the `<STATUS|Mpos:x,y|>` frame format.
+- Overrides `UpdateStatus` to use `StatusQueryCommand` (`?`) and `ReadStatusResponse`, and separates the parse + completion-check logic into a reusable `UpdateStatusFromLine` method.
+
+### UniversalPolarAlignmentBase extensibility changes
+- Made `MoveRelative`, `MoveAbsolute`, `UpdateStatus`, and `Abort` **virtual** so subclasses can override the full movement and status-polling behaviour.
+- Added virtual hook `OnPortOpened(SerialPort)` called immediately after the port is opened, allowing subclasses to perform a protocol handshake before the first status query.
+- Added virtual `IsStatusResponseValid(string)` so subclasses can define their own validation logic during port scanning.
+- Added virtual `ReadStatusResponse(SerialPort)` with a configurable `StatusResponseLineCount` property, replacing the hardcoded two-line read of the original `ReadStatusLine` helper.
+- Added virtual `StatusQueryCommand` property (default `"?"`) so subclasses can change the polling command without reimplementing `UpdateStatus`.
+- Extracted `TryApplyStatusLine(string)` as a protected helper that runs the regex, updates `Status` / `XPosition` / `YPosition` / `ZPosition`, and returns a bool — reusable by any override.
+- Changed `Status`, `XLastDirection`, `YLastDirection`, `ZLastDirection`, `XPosition`, `YPosition`, `ZPosition`, and `semaphore` from `private` to `protected` so subclasses have direct access when needed.
+- Added a no-op virtual `Abort(CancellationToken)` implementation to satisfy the `IPolarAlignmentSystem` interface; subclasses override it to send a hardware stop command.
+
+### UniversalPolarAlignmentBaseVM extensibility changes
+- Added virtual `TestConnectStatus` string property and `TestConnectCommand` relay command so subclasses (e.g. MLAstroRPA) can expose a lightweight connection test with a status message without reimplementing the full connect flow.
+- Added `Abort` relay command in the base VM that calls `upa.Abort(token)`, wired to both the UI and the automated adjustment flow.
+- Poll loop (`StartPoll`) now only calls `RefreshStatus` when `IsNotMoving` is true, preventing concurrent serial access during active movement.
+
 ## Version 2.2.6.2
 - Fixed TPPA cancellation during plate solving so skipping the sequence item does not surface ASTAP sidecar cleanup errors.
 
@@ -17,8 +52,6 @@
 - Improved automated hardware adjustments, including direction handling, backlash behavior, movement timing, and recovery from failed moves.
 - Hid manual hardware controls while automated adjustments are active.
 - Corrected the polar-alignment log path documentation.
-
-+ Add MLastroRPA system
 
 ## Version 2.2.5.0
 - Replaced OAPA/Avalon checkboxes with a single ComboBox selector (None / UPAS / OAPA) per code review feedback
