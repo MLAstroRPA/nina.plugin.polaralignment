@@ -13,10 +13,48 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
 
         protected override string SystemName => "MLAstroRPA";
         protected override string NewLineSequence => "\n";
-        protected override int ScanReadTimeout => 1000;
+        protected override int ScanReadTimeout => 2000;
         protected override int ScanWriteTimeout => 1000;
         protected override bool ClearBufferOnConnect => true;
-        protected override int StatusResponseLineCount => 1;
+        // The MLAstroRPA device emits a short prompt/echo line, then the status payload line,
+        // and finally a metadata line. Read three lines and return the meaningful status.
+        protected override int StatusResponseLineCount => 3;
+
+        protected override string ReadStatusResponse(SerialPort serialPort) {
+            try {
+                string first = null;
+                string preferred = null;
+                for (int i = 0; i < StatusResponseLineCount; i++) {
+                    string line;
+                    try {
+                        line = serialPort.ReadLine();
+                    } catch (TimeoutException) {
+                        Logger.Info($"[MLAstroRPA] ReadStatusResponse: read timeout on line {i + 1}");
+                        break;
+                    }
+
+                    Logger.Info($"[MLAstroRPA] ReadStatusResponse: line {i + 1}: {line}");
+                    if (i == 0) first = line;
+                    if (!string.IsNullOrWhiteSpace(line)) {
+                        var trimmed = line.Trim();
+                        if (GetStatusRegex().IsMatch(trimmed)) {
+                            preferred = trimmed;
+                            // keep reading to flush any remaining lines
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(preferred)) {
+                    Logger.Info($"[MLAstroRPA] ReadStatusResponse: selected preferred line: {preferred}");
+                    return preferred;
+                }
+                Logger.Info($"[MLAstroRPA] ReadStatusResponse: returning first line: {first}");
+                return first;
+            } catch (Exception ex) {
+                Logger.Error($"[MLAstroRPA] ReadStatusResponse error: {ex.Message}");
+                return null;
+            }
+        }
 
         private float xGearRatio = 1f;
         private float yGearRatio = 1f;
