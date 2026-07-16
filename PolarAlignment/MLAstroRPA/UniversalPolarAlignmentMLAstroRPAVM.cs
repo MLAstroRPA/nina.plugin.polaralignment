@@ -89,7 +89,8 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
                 try
                 {
                     port.Open();
-                    await Task.Delay(100);
+                    // Give the device a bit more time to become responsive after open
+                    await Task.Delay(300);
                     port.DiscardInBuffer();
 
                     Logger.Info($"[MLAstroRPA-TestConnect] Opened {comPort} (115200 8N1) {DateTime.Now:HH:mm:ss.fff}");
@@ -104,7 +105,21 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
                     }
 
                     port.WriteLine("?");
-                    var status = port.ReadLine()?.Trim();
+                    string status = null;
+                    try {
+                        // Read a few lines and pick the first that matches the expected status regex.
+                        for (int i = 0; i < 3; i++) {
+                            var line = port.ReadLine()?.Trim();
+                            Logger.Info($"[MLAstroRPA-TestConnect] {comPort} status line {i + 1}: {line}");
+                            if (!string.IsNullOrWhiteSpace(line) && StatusRegex().IsMatch(line)) {
+                                status = line;
+                                break;
+                            }
+                        }
+                    } catch (TimeoutException) {
+                        Logger.Info($"[MLAstroRPA-TestConnect] {comPort} status read timed out.");
+                    }
+
                     Logger.Info($"[MLAstroRPA-TestConnect] {comPort} status response: {status}");
 
                     if (!string.IsNullOrWhiteSpace(status) && StatusRegex().IsMatch(status))
