@@ -48,6 +48,15 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
             }
         }
 
+        public bool LogPollingData {
+            get => Properties.Settings.Default.LogPollingData;
+            set {
+                Properties.Settings.Default.LogPollingData = value;
+                CoreUtil.SaveSettings(Properties.Settings.Default);
+                RaisePropertyChanged();
+            }
+        }
+
         public override float XGearRatio { get => 1f; set { } }
         public override int XSpeed { get => 1; set { } }
         public override float YGearRatio { get => 1f; set { } }

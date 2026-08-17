@@ -52,8 +52,17 @@ namespace NINA.Plugins.PolarAlignment {
             inner.DiscardInBuffer();
         }
 
+        private bool lastWriteWasPollingQuery;
+
+        private static bool LogPollingData => Properties.Settings.Default.LogPollingData;
+
+        private bool ShouldLogLine() => !lastWriteWasPollingQuery || LogPollingData;
+
         public void WriteLine(string text) {
-            Logger.Info($"[Serial-TX] {inner.PortName}: {text}");
+            lastWriteWasPollingQuery = string.Equals(text?.Trim(), "?", StringComparison.Ordinal);
+            if (ShouldLogLine()) {
+                Logger.Info($"[Serial-TX] {inner.PortName}: {text}");
+            }
             try {
                 inner.WriteLine(text);
             } catch (Exception ex) {
@@ -65,10 +74,14 @@ namespace NINA.Plugins.PolarAlignment {
         public string ReadLine() {
             try {
                 var line = inner.ReadLine();
-                Logger.Info($"[Serial-RX] {inner.PortName}: {line}");
+                if (ShouldLogLine()) {
+                    Logger.Info($"[Serial-RX] {inner.PortName}: {line}");
+                }
                 return line;
             } catch (Exception ex) {
-                Logger.Info($"[Serial-RX] {inner.PortName}: read failed: {ex.GetType().Name}: {ex.Message}");
+                if (ShouldLogLine()) {
+                    Logger.Info($"[Serial-RX] {inner.PortName}: read failed: {ex.GetType().Name}: {ex.Message}");
+                }
                 throw;
             }
         }
@@ -76,10 +89,14 @@ namespace NINA.Plugins.PolarAlignment {
         public string ReadExisting() {
             try {
                 var data = inner.ReadExisting();
-                Logger.Info($"[Serial-RX] {inner.PortName}: {data}");
+                if (ShouldLogLine()) {
+                    Logger.Info($"[Serial-RX] {inner.PortName}: {data}");
+                }
                 return data;
             } catch (Exception ex) {
-                Logger.Info($"[Serial-RX] {inner.PortName}: read failed: {ex.GetType().Name}: {ex.Message}");
+                if (ShouldLogLine()) {
+                    Logger.Info($"[Serial-RX] {inner.PortName}: read failed: {ex.GetType().Name}: {ex.Message}");
+                }
                 throw;
             }
         }

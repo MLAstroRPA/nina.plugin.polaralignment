@@ -526,5 +526,17 @@ namespace NINA.Plugins.PolarAlignment.Properties {
                 this["OAPAYHoldPercent"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool LogPollingData {
+            get {
+                return ((bool)(this["LogPollingData"]));
+            }
+            set {
+                this["LogPollingData"] = value;
+            }
+        }
     }
 }
