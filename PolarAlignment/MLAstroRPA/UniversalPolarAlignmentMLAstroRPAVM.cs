@@ -76,7 +76,7 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
                 TestConnectStatus = $"[DEBUG] Checking {comPort}... {DateTime.Now:HH:mm:ss.fff}";
                 Logger.Info($"[MLAstroRPA-TestConnect] Checking {comPort}... {DateTime.Now:HH:mm:ss.fff}");
 
-                using var port = new SerialPort(comPort, 115200, Parity.None, 8, StopBits.One)
+                using var port = new LoggingSerialPort(comPort, 115200, Parity.None, 8, StopBits.One)
                 {
                     NewLine = "\n",
                     Handshake = Handshake.None,
@@ -99,7 +99,8 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
                     var ack = port.ReadLine()?.Trim();
                     Logger.Info($"[MLAstroRPA-TestConnect] {comPort} handshake response: {ack}");
 
-                    if (!string.Equals(ack, "ok", StringComparison.OrdinalIgnoreCase))
+                    var ackToken = ack?.Split(',')[0];
+                    if (!string.Equals(ackToken, "ok", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
