@@ -13,44 +13,180 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
 
         protected override string SystemName => "MLAstroRPA";
         protected override string NewLineSequence => "\n";
-        protected override int ScanReadTimeout => 2000;
-        protected override int ScanWriteTimeout => 1000;
+        protected override int ScanReadTimeout => 300;
+        protected override int ScanWriteTimeout => 300;
         protected override bool ClearBufferOnConnect => true;
         // The MLAstroRPA device emits a short prompt/echo line, then the status payload line,
         // and finally a metadata line. Read three lines and return the meaningful status.
         protected override int StatusResponseLineCount => 3;
 
-        protected override string ReadStatusResponse(SerialPort serialPort) {
-            try {
-                string first = null;
-                string preferred = null;
-                for (int i = 0; i < StatusResponseLineCount; i++) {
-                    string line;
-                    try {
-                        line = serialPort.ReadLine();
-                    } catch (TimeoutException) {
-                        Logger.Info($"[MLAstroRPA] ReadStatusResponse: read timeout on line {i + 1}");
-                        break;
-                    }
+        protected override string ReadStatusResponse(LoggingSerialPort serialPort)
+        {
+            try
+            {
+                var buffer = string.Empty;
+                string firstNonEmpty = null;
+                string firstShortToken = null;
+                var shortTokenCounts = new System.Collections.Generic.Dictionary<string, int>(System.StringComparer.OrdinalIgnoreCase);
 
-                    Logger.Info($"[MLAstroRPA] ReadStatusResponse: line {i + 1}: {line}");
-                    if (i == 0) first = line;
-                    if (!string.IsNullOrWhiteSpace(line)) {
-                        var trimmed = line.Trim();
-                        if (GetStatusRegex().IsMatch(trimmed)) {
-                            preferred = trimmed;
-                            // keep reading to flush any remaining lines
+                // whitelist of short status tokens to treat specially
+                var shortTokens = new System.Collections.Generic.HashSet<string>(System.StringComparer.OrdinalIgnoreCase)
+                {
+                    "ok",
+                    "READY",
+                    "COMPLETED",
+                    "COMPLETTED",
+                    "DISCONNECTED"
+                };
+
+                // If we did not explicitly query (i.e., spontaneous data), do a single non-blocking read
+                if (!IsExpectingStatusResponse)
+                {
+                    try
+                    {
+                        var available = serialPort.BytesToRead;
+                        if (available <= 0)
+                            return null;
+
+                        buffer = serialPort.ReadExisting();
+                        var lines = buffer.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+                        for (int i = 0; i < lines.Length; i++)
+                        {
+                            var trimmed = lines[i].Trim();
+                            if (string.IsNullOrWhiteSpace(trimmed))
+                                continue;
+                            // prefer a full regex match
+                            var m = GetStatusRegex().Match(trimmed);
+                            if (m.Success)
+                            {
+                                var found = m.Value.Trim();
+                                Logger.Info($"[MLAstroRPA] ReadStatusResponse: found status (non-query): {found}");
+                                return found;
+                            }
+                            // return the first non-empty fragment (could be short token)
+                            Logger.Info($"[MLAstroRPA] ReadStatusResponse(part non-query): {trimmed}");
+                            return trimmed;
+                        }
+                        return null;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error($"[MLAstroRPA] ReadStatusResponse error (non-query): {ex.Message}");
+                        return null;
+                    }
+                }
+
+                // total window to aggregate fragments from firmware (adjustable)
+                var deadline = DateTime.UtcNow.AddMilliseconds(300);
+
+                while (DateTime.UtcNow < deadline)
+                {
+                    try
+                    {
+                        var available = serialPort.BytesToRead;
+                        if (available > 0)
+                        {
+                            buffer += serialPort.ReadExisting();
+
+                            // 1) try regex match across the whole buffer to handle split fragments
+                            var match = GetStatusRegex().Match(buffer);
+                            if (match.Success)
+                            {
+                                var found = match.Value.Trim();
+                                Logger.Info($"[MLAstroRPA] ReadStatusResponse: found status: {found}");
+                                return found;
+                            }
+
+                            var lines = buffer.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+
+                            // keep last partial fragment in buffer
+                            buffer = lines[^1];
+
+                            for (int i = 0; i < lines.Length - 1; i++)
+                            {
+                                var line = lines[i];
+                                var trimmed = line.Trim();
+
+                                if (string.IsNullOrWhiteSpace(trimmed))
+                                    continue;
+
+                                // if it's a known short token, remember it but don't spam logs
+                                if (shortTokens.Contains(trimmed))
+                                {
+                                    if (firstShortToken == null)
+                                        firstShortToken = trimmed;
+                                    if (shortTokenCounts.ContainsKey(trimmed))
+                                        shortTokenCounts[trimmed]++;
+                                    else
+                                        shortTokenCounts[trimmed] = 1;
+                                    continue;
+                                }
+
+                                // log longer fragments
+                                Logger.Info($"[MLAstroRPA] ReadStatusResponse(part): {line}");
+
+                                if (firstNonEmpty == null)
+                                    firstNonEmpty = trimmed;
+
+                                if (GetStatusRegex().IsMatch(trimmed))
+                                {
+                                    Logger.Info($"[MLAstroRPA] ReadStatusResponse: selected preferred line: {trimmed}");
+                                    return trimmed;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Thread.Sleep(10);
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Logger.Error($"[MLAstroRPA] ReadStatusResponse error (inner): {ex.Message}");
+                        break;
+                    }
                 }
 
-                if (!string.IsNullOrWhiteSpace(preferred)) {
-                    Logger.Info($"[MLAstroRPA] ReadStatusResponse: selected preferred line: {preferred}");
-                    return preferred;
+                // final attempt: try match across any remaining buffer
+                var finalMatch = GetStatusRegex().Match(buffer);
+                if (finalMatch.Success)
+                {
+                    var found = finalMatch.Value.Trim();
+                    Logger.Info($"[MLAstroRPA] ReadStatusResponse: final match: {found}");
+                    return found;
                 }
-                Logger.Info($"[MLAstroRPA] ReadStatusResponse: returning first line: {first}");
-                return first;
-            } catch (Exception ex) {
+
+                // If we saw short tokens, log a compact summary and return the first short token as a fallback
+                if (shortTokenCounts.Count > 0)
+                {
+                    try
+                    {
+                        var parts = new System.Collections.Generic.List<string>();
+                        foreach (var kv in shortTokenCounts)
+                        {
+                            parts.Add($"{kv.Key} x{kv.Value}");
+                        }
+                        var summary = string.Join(", ", parts);
+                        Logger.Info($"[MLAstroRPA] ReadStatusResponse: short tokens summary: {summary}");
+                    }
+                    catch { }
+
+                    return firstShortToken;
+                }
+
+                // Only return a non-empty fragment if it looks like a complete status (starts with '<')
+                if (!string.IsNullOrWhiteSpace(firstNonEmpty)
+                    && firstNonEmpty.TrimStart().StartsWith("<"))
+                {
+                    Logger.Info($"[MLAstroRPA] ReadStatusResponse: returning first non-empty: {firstNonEmpty}");
+                    return firstNonEmpty;
+                }
+
+                Logger.Info("[MLAstroRPA] ReadStatusResponse: no data received or fragments were incomplete");
+                return null;
+            }
+            catch (Exception ex)
+            {
                 Logger.Error($"[MLAstroRPA] ReadStatusResponse error: {ex.Message}");
                 return null;
             }
@@ -63,13 +199,14 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
 
         protected override Regex GetStatusRegex() => StatusRegex();
 
-        protected override void OnPortOpened(SerialPort serialPort) {
+        protected override void OnPortOpened(LoggingSerialPort serialPort) {
             serialPort.WriteLine("[MLAstroRPA-TC]");
             var response = serialPort.ReadLine();
-            if (!string.Equals(response?.Trim(), "ok", StringComparison.OrdinalIgnoreCase)) {
+            var firstToken = response?.Trim().Split(',')[0];
+            if (!string.Equals(firstToken, "ok", StringComparison.OrdinalIgnoreCase)) {
                 throw new Exception($"Handshake failed. Response: {response}");
             }
-            Logger.Info("[MLAstroRPA] Handshake OK");
+            Logger.Info($"[MLAstroRPA] Handshake OK: {response?.Trim()}");
         }
 
         protected override bool IsStatusResponseValid(string status) {
@@ -115,13 +252,16 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
             var timeoutTask = Task.Delay(TimeSpan.FromSeconds(90), timeoutCts.Token);
 
             // Poll "?" periodically until the device reports READY or ALIGN_COMPLETED
-            var pollingTask = Task.Run(async () => {
+                var pollingTask = Task.Run(async () => {
                 while (!completionSource.Task.IsCompleted) {
                     try {
-                        await semaphore.WaitAsync(timeoutCts.Token);
-                        try {
-                            Port.WriteLine(StatusQueryCommand);
-                            var line = ReadStatusResponse(Port)?.Trim();
+                            await semaphore.WaitAsync(timeoutCts.Token);
+                            try {
+                                // indicate this ReadStatusResponse call follows an explicit query
+                                IsExpectingStatusResponse = true;
+                                Port.WriteLine(StatusQueryCommand);
+                                var line = ReadStatusResponse(Port)?.Trim();
+                                IsExpectingStatusResponse = false;
                             Logger.Info($"[MLAstroRPA] Poll status: {line}");
                             if (!string.IsNullOrWhiteSpace(line)) {
                                 UpdateStatusFromLine(line);
