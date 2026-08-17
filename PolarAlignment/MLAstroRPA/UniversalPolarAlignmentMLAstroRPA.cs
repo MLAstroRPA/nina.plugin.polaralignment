@@ -55,6 +55,9 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
                             var trimmed = lines[i].Trim();
                             if (string.IsNullOrWhiteSpace(trimmed))
                                 continue;
+                            if (firstNonEmpty == null)
+                                firstNonEmpty = trimmed;
+
                             // prefer a full regex match
                             var m = GetStatusRegex().Match(trimmed);
                             if (m.Success)
@@ -63,10 +66,18 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
                                 Logger.Info($"[MLAstroRPA] ReadStatusResponse: found status (non-query): {found}");
                                 return found;
                             }
-                            // return the first non-empty fragment (could be short token)
+
                             Logger.Info($"[MLAstroRPA] ReadStatusResponse(part non-query): {trimmed}");
-                            return trimmed;
                         }
+
+                        // Fall back to the first non-empty fragment, but ignore a bare
+                        // "ok" acknowledgment since it carries no status information.
+                        if (!string.IsNullOrWhiteSpace(firstNonEmpty)
+                            && !string.Equals(firstNonEmpty, "ok", StringComparison.OrdinalIgnoreCase))
+                        {
+                            return firstNonEmpty;
+                        }
+
                         return null;
                     }
                     catch (Exception ex)
@@ -233,12 +244,17 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
                 }
 
                 Logger.Info($"[MLAstroRPA] TX ALIGN: {command}");
+
+                // Remove stale responses left over from background "?" polling so the
+                // next read is the device's actual acknowledgment of this command.
+                if (Port.BytesToRead > 0) {
+                    Logger.Info($"[MLAstroRPA] Discarding {Port.BytesToRead} stale bytes before ALIGN");
+                    Port.DiscardInBuffer();
+                }
+
                 Port.WriteLine(command);
 
-                var ack = Port.ReadLine()?.Trim();
-                if (!string.Equals(ack, "ok", StringComparison.OrdinalIgnoreCase)) {
-                    throw new Exception($"Align command rejected: {ack}");
-                }
+                ReadAlignAck();
             } catch {
                 lock (alignmentSync) {
                     alignmentCompletionSource = null;
@@ -294,6 +310,32 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
             Logger.Info($"[MLAstroRPA] Align completed with status: {finalStatus}");
         }
 
+        private string ReadAlignAck() {
+            string line;
+            try {
+                line = Port.ReadLine()?.Trim();
+            } catch (TimeoutException) {
+                Logger.Info("[MLAstroRPA] RX ALIGN ack: none received within read timeout; continuing");
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(line)) {
+                Logger.Info("[MLAstroRPA] RX ALIGN ack: (empty line)");
+                return null;
+            }
+
+            // Firmware acknowledges with "ok" (optionally followed by details) or by
+            // immediately reporting a status line. Both mean the command was accepted.
+            if (line.StartsWith("ok", StringComparison.OrdinalIgnoreCase)
+                || GetStatusRegex().IsMatch(line)) {
+                Logger.Info($"[MLAstroRPA] RX ALIGN ack: {line}");
+                return line;
+            }
+
+            Logger.Error($"[MLAstroRPA] RX ALIGN ack (unexpected): {line}");
+            throw new Exception($"Align command rejected: {line}");
+        }
+
         public override async Task Abort(CancellationToken token) {
             await semaphore.WaitAsync(token);
             try {
@@ -320,10 +362,15 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
         }
 
         protected override void UpdateStatus() {
-            Port.WriteLine(StatusQueryCommand);
-            var line = ReadStatusResponse(Port)?.Trim();
-            if (!string.IsNullOrWhiteSpace(line)) {
-                UpdateStatusFromLine(line);
+            IsExpectingStatusResponse = true;
+            try {
+                Port.WriteLine(StatusQueryCommand);
+                var line = ReadStatusResponse(Port)?.Trim();
+                if (!string.IsNullOrWhiteSpace(line)) {
+                    UpdateStatusFromLine(line);
+                }
+            } finally {
+                IsExpectingStatusResponse = false;
             }
         }
 
