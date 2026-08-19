@@ -1,6 +1,5 @@
 # Changelog
 
-<<<<<<< HEAD
 ## Version 2.2.6.7
 - Fixed UPAS azimuth backlash compensation.
 
@@ -16,10 +15,7 @@
 ## Version 2.2.6.3
 - Improved correction-loop performance by avoiding star detection until a reference star is manually selected, then projecting that locked star between frames and re-detecting only after 120 seconds, a field shift over 0.5 degrees, or an outside-image projection.
 
-## Version 2.2.6.2-MLAstroRPA
-=======
 ## Unreleased (MLAstroRPA-Base-v2.2.6.2 branch)
->>>>>>> e3f85d2 (Update changelog.md for MLAstroRPA system)
 
 ### MLAstroRPA system integration
 - Added `MLAstroRPA` as a new polar alignment system option alongside None / UPAS / OAPA in the plugin settings ComboBox.
