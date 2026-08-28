@@ -18,6 +18,9 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
             protected set { testConnectStatus = value; OnPropertyChanged(nameof(TestConnectStatus)); }
         }
 
+        // The TestConnectCommand type is dictated by IPolarAlignmentSystemVM /
+        // UniversalPolarAlignmentBaseVM, which still expose the obsolete NINA.Core.Utility.RelayCommand.
+#pragma warning disable CS0618
         private readonly NINA.Core.Utility.RelayCommand testConnectCommand;
         public override NINA.Core.Utility.RelayCommand TestConnectCommand => testConnectCommand;
         public bool IsMLAstroRPASelected => SystemName == "MLAstroRPA";
@@ -26,6 +29,7 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
         {
             testConnectCommand = new RelayCommand(_ => _ = TestConnectAsync());
         }
+#pragma warning restore CS0618
  
         protected override IPolarAlignmentSystem CreateSystem() => new UniversalPolarAlignmentMLAstroRPA();
         protected override string SystemName => "MLAstroRPA";
