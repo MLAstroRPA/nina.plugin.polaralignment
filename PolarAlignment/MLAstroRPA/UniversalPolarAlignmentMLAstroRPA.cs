@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks; 
 
 namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
-    public partial class UniversalPolarAlignmentMLAstroRPA : UniversalPolarAlignmentBase {
+    public partial class UniversalPolarAlignmentMLAstroRPA : UniversalPolarAlignmentBase, IDisposable {
         private readonly object alignmentSync = new();
         private TaskCompletionSource<string> alignmentCompletionSource;
 
@@ -425,5 +425,25 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
 
         [GeneratedRegex(@"<(?<status>[^|>]+)\|M[Pp]os:(?<x>[+-]?\d+(\.\d+)?),(?<y>[+-]?\d+(\.\d+)?)(,(?<z>[+-]?\d+(\.\d+)?))?\|")]
         private static partial Regex StatusRegex();
+
+        // Explicit IDisposable implementation: the firmware's "Disconnect" command performs a
+        // graceful stop and releases the serial handshake, so it must be sent right before the
+        // COM port is actually closed. The base VM calls Dispose() through IPolarAlignmentSystem,
+        // so interface dispatch reaches this implementation instead of the inherited base one.
+        void IDisposable.Dispose() {
+            try {
+                if (Port?.IsOpen == true) {
+                    Logger.Info("[MLAstroRPA] Sending Disconnect command to firmware");
+                    Port.WriteLine("Disconnect");
+                    // Give the firmware a moment to stop motors and release the handshake
+                    // before the COM port is closed.
+                    Thread.Sleep(150);
+                }
+            } catch (Exception ex) {
+                Logger.Error($"[MLAstroRPA] Disconnect command failed: {ex.Message}");
+            } finally {
+                base.Dispose();
+            }
+        }
     }
 }
