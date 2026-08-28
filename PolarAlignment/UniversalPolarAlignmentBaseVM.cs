@@ -35,6 +35,9 @@ namespace NINA.Plugins.PolarAlignment {
         [ObservableProperty]
         private float targetPositionY;
 
+        public virtual string TestConnectStatus { get; protected set; } = string.Empty;
+        public virtual NINA.Core.Utility.RelayCommand TestConnectCommand => null;
+
         public abstract bool DoAutomatedAdjustments { get; set; }
         public abstract double AutomatedAdjustmentSettleTime { get; set; }
         public abstract float XGearRatio { get; set; }
@@ -179,6 +182,17 @@ namespace NINA.Plugins.PolarAlignment {
                 }
             } finally {
                 await Application.Current.Dispatcher.BeginInvoke(() => IsNotMoving = true);
+            }
+        }
+
+        [RelayCommand]
+        public virtual async Task Abort(CancellationToken token) {
+            try {
+                if (upa?.Connected == true) {
+                    await upa.Abort(token).ConfigureAwait(false);
+                }
+            } catch (Exception ex) {
+                Logger.Error(ex);
             }
         }
 

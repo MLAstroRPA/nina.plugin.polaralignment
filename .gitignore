@@ -94,3 +94,7 @@ orleans.codegen.cs
 
 # Firmware (managed separately)
 firmware/
+
+# MLAstroRPA protocol files (tracked in the MLAstroRPA repo)
+/PolarAlignment/MLAstroRPA/protocol.md
+/PolarAlignment/MLAstroRPA/Serial-protocol.md - Shortcut.lnk

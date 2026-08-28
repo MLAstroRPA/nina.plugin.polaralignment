@@ -6,7 +6,8 @@ namespace NINA.Plugins.PolarAlignment {
     public enum PolarAlignmentSystemType {
         None,
         UPAS,
-        OAPA
+        OAPA,
+        MLAstroRPA
     }
 
     public enum Axis {
@@ -39,5 +40,6 @@ namespace NINA.Plugins.PolarAlignment {
         Task MoveRelative(Axis axis, int speed, float position, CancellationToken token);
         Task MoveAbsolute(Axis axis, int speed, float position, CancellationToken token);
         Task RefreshStatus(CancellationToken token);
+        Task Abort(CancellationToken token);
     }
 }
