@@ -3,6 +3,9 @@
 ## Unreleased (MLAstroRPA-BaseOn-16b785e branch)
 
 ### Versioning
+
+This MLAstroRPA edition is a fork of the upstream Three Point Polar Alignment (TPPA) plugin, branched from commit `16b785e` of the TPPA `master` branch. At that commit, the upstream TPPA plugin had version number `2.2.5.0`.
+
 - The plugin version continues to follow the upstream TPPA scheme (a single 4-part number, currently `2.2.6.0`).
 - The RPA revision is tracked separately so users can identify this MLAstroRPA edition: `AssemblyInformationalVersion` = `2.2.6.0+RPA.1.0` and assembly metadata `RPAVersion` = `1.0`.
 
