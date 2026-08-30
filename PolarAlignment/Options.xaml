@@ -20,7 +20,9 @@
     <coreconverters:BooleanToVisibilityHiddenConverter x:Key="BooleanToVisibilityHiddenConverter" />
     <s:String x:Key="AlignmentSystemConnectToolTip">Creates the selected hardware system, scans available serial ports for a matching device, and starts status polling.</s:String>
     <s:String x:Key="AlignmentSystemDisconnectToolTip">Disposes the current hardware connection and stops status polling.</s:String>
-    <s:String x:Key="LogPollingDataToolTip">When enabled, serial responses to status polling queries are written to the log. When disabled, polling traffic is suppressed to reduce log noise.</s:String>
+    <s:String x:Key="MLAstroRPAOvershootEnabledToolTip">When enabled, the Alt axis correction ratio can be raised above the default 75% for the selected direction(s).</s:String>
+    <s:String x:Key="MLAstroRPAOvershootUpToolTip">When the Alt axis must correct upwards (as shown on screen), move by the configured overshoot percentage of the error instead of the default 75%. Range: 100% (full correction, no overshoot) to 150% (50% past the target).</s:String>
+    <s:String x:Key="MLAstroRPAOvershootDownToolTip">When the Alt axis must correct downwards (as shown on screen), move by the configured overshoot percentage of the error instead of the default 75%. Range: 100% (full correction, no overshoot) to 150% (50% past the target).</s:String>
     <DataTemplate x:Key="Three Point Polar Alignment_Options">
         <Grid>
             <Grid.RowDefinitions>
@@ -473,8 +475,11 @@
                 Margin="0,10,0,0"
                 Header="MLAstro Robotic Polar Alignment System"
                 Visibility="{Binding IsMLAstroRPASelected, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <Grid Margin="0,10,0,0">
+                <Grid Margin="0,10,0,0" Grid.IsSharedSizeScope="True">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition />
@@ -502,24 +507,85 @@
                         Margin="0,5,0,0"
                         DataContext="{Binding UniversalPolarAlignmentMLAstroRPAVM}">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="OvershootLabel" />
                             <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
                         </Grid.ColumnDefinitions>
                         <TextBlock
                             VerticalAlignment="Center"
-                            Text="Log polling data"
-                            ToolTip="{StaticResource LogPollingDataToolTip}" />
+                            Text="Enable overshoot"
+                            ToolTip="{StaticResource MLAstroRPAOvershootEnabledToolTip}" />
                         <CheckBox
                             Grid.Column="1"
                             MinWidth="80"
                             Margin="5,0,0,0"
+                            VerticalAlignment="Center"
+                            IsChecked="{Binding MLAstroRPAOvershootEnabled}"
+                            ToolTip="{StaticResource MLAstroRPAOvershootEnabledToolTip}" />
+                    </Grid>
+                    <Grid
+                        Grid.Row="2"
+                        Margin="0,5,0,0"
+                        DataContext="{Binding UniversalPolarAlignmentMLAstroRPAVM}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="OvershootLabel" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Text="Run overshoot for moving Up"
+                            ToolTip="{StaticResource MLAstroRPAOvershootUpToolTip}" />
+                        <CheckBox
+                            Grid.Column="1"
+                            MinWidth="80"
+                            Margin="5,0,0,0"
+                            VerticalAlignment="Center"
+                            IsEnabled="{Binding MLAstroRPAOvershootEnabled}"
+                            IsChecked="{Binding MLAstroRPAOvershootUp}"
+                            ToolTip="{StaticResource MLAstroRPAOvershootUpToolTip}" />
+                        <ninactrl:UnitTextBox
+                            Grid.Column="2"
+                            MinWidth="70"
+                            Margin="5,0,0,0"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            IsChecked="{Binding LogPollingData}"
-                            ToolTip="{StaticResource LogPollingDataToolTip}" />
+                            IsEnabled="{Binding MLAstroRPAOvershootEnabled}"
+                            Text="{Binding MLAstroRPAOvershootUpPercent}"
+                            Unit="%" />
+                    </Grid>
+                    <Grid
+                        Grid.Row="3"
+                        Margin="0,5,0,0"
+                        DataContext="{Binding UniversalPolarAlignmentMLAstroRPAVM}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="OvershootLabel" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Text="Run overshoot for moving Down"
+                            ToolTip="{StaticResource MLAstroRPAOvershootDownToolTip}" />
+                        <CheckBox
+                            Grid.Column="1"
+                            MinWidth="80"
+                            Margin="5,0,0,0"
+                            VerticalAlignment="Center"
+                            IsEnabled="{Binding MLAstroRPAOvershootEnabled}"
+                            IsChecked="{Binding MLAstroRPAOvershootDown}"
+                            ToolTip="{StaticResource MLAstroRPAOvershootDownToolTip}" />
+                        <ninactrl:UnitTextBox
+                            Grid.Column="2"
+                            MinWidth="70"
+                            Margin="5,0,0,0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            IsEnabled="{Binding MLAstroRPAOvershootEnabled}"
+                            Text="{Binding MLAstroRPAOvershootDownPercent}"
+                            Unit="%" />
                     </Grid>
                     <TextBlock
-                        Grid.Row="2"
+                        Grid.Row="5"
                         Margin="0,8,0,0"
                         Foreground="Green"
                         TextWrapping="Wrap"

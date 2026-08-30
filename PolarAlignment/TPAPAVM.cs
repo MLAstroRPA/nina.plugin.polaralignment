@@ -11,6 +11,7 @@ using NINA.Image.ImageAnalysis;
 using NINA.Image.Interfaces;
 using NINA.PlateSolving;
 using NINA.Plugins.PolarAlignment.Avalon;
+using NINA.Plugins.PolarAlignment.MLAstroRPA;
 using NINA.Plugins.PolarAlignment.OAPA;
 using NINA.Profile.Interfaces;
 using NINA.WPF.Base.Behaviors;
@@ -174,13 +175,49 @@ namespace NINA.Plugins.PolarAlignment {
                 await activeSystem.NudgeX(azAdjustment, token);
                 lastMovement = new Movement(azAdjustment, 0, azimuthSign, lastMovement?.AltitudeSign ?? 1f, az.Degree, alt.Degree);
             } else {
-                float altAdjustment = (float)alt.ArcMinutes * altitudeSign * 0.75f;
+                var ratio = GetAltitudeCorrectionRatio(activeSystem);
+                float altAdjustment = (float)alt.ArcMinutes * altitudeSign * ratio;
                 progress?.Report(new ApplicationStatus() { Status = $"Nudging along Y axis by {Math.Round(altAdjustment, 2)}" });
                 await activeSystem.NudgeY(altAdjustment, token);
                 lastMovement = new Movement(0, altAdjustment, lastMovement?.AzimuthSign ?? 1f, altitudeSign, az.Degree, alt.Degree);
             }
 
             await CoreUtil.Wait(TimeSpan.FromSeconds(activeSystem.AutomatedAdjustmentSettleTime), token, progress, "Settling");
+        }
+
+        /// <summary>
+        /// Returns the correction ratio applied to the Alt axis move. Normally 0.75 (75%),
+        /// but for the MLAstroRPA system it is raised to the configured overshoot percentage
+        /// when the master "Enable overshoot" switch is on and the checkbox for the current
+        /// (on-screen) correction direction is enabled.
+        /// </summary>
+        private float GetAltitudeCorrectionRatio(IPolarAlignmentSystemVM activeSystem) {
+            if (!(activeSystem is UniversalPolarAlignmentMLAstroRPAVM)) {
+                return 0.75f;
+            }
+
+            // When the master "Enable overshoot" switch is off, always use the default 75%.
+            if (!Properties.Settings.Default.MLAstroRPAOvershootEnabled) {
+                return 0.75f;
+            }
+
+            // When the checkbox for the current (on-screen) correction direction is off,
+            // also fall back to the default 75%.
+            var overshootEnabled = PolarErrorDetermination.AltitudeCorrectionIsUp
+                ? Properties.Settings.Default.MLAstroRPAOvershootUp
+                : Properties.Settings.Default.MLAstroRPAOvershootDown;
+            if (!overshootEnabled) {
+                return 0.75f;
+            }
+
+            var percent = PolarErrorDetermination.AltitudeCorrectionIsUp
+                ? Properties.Settings.Default.MLAstroRPAOvershootUpPercent
+                : Properties.Settings.Default.MLAstroRPAOvershootDownPercent;
+
+            // Overshoot is constrained to 100% (correct the full error, no overshoot beyond
+            // the target) up to 150% (move up to 50% past the target).
+            percent = Math.Clamp(percent, 100.0, 150.0);
+            return (float)(percent / 100.0);
         }
 
         private void CalculateErrorDetails() {
@@ -588,23 +625,30 @@ namespace NINA.Plugins.PolarAlignment {
             get => InitialMountAxisTotalError.Degree > 10;
         }
 
-        public string CurrentMountAxisAltitudeErrorDirection {
+        /// <summary>
+        /// True when the Alt axis must be corrected upwards according to the direction
+        /// reported on screen by the solve (mirrors <see cref="CurrentMountAxisAltitudeErrorDirection"/>).
+        /// This intentionally ignores the motor command sign (which can be flipped by the
+        /// automated direction correction).
+        /// </summary>
+        public bool AltitudeCorrectionIsUp {
             get {
                 if (CurrentMountAxisAltitudeError.Degree > 0) {
-                    if (Northern) {
-                        return "🠗 Move down";
-                    } else {
-                        return "Move up 🠕";
-                    }
-                } else if (CurrentMountAxisAltitudeError.Degree < 0) {
-                    if (Northern) {
-                        return "Move up 🠕";
-                    } else {
-                        return "🠗 Move down";
-                    }
-                } else {
+                    return !Northern;
+                }
+                if (CurrentMountAxisAltitudeError.Degree < 0) {
+                    return Northern;
+                }
+                return false;
+            }
+        }
+
+        public string CurrentMountAxisAltitudeErrorDirection {
+            get {
+                if (CurrentMountAxisAltitudeError.Degree == 0) {
                     return string.Empty;
                 }
+                return AltitudeCorrectionIsUp ? "Move up 🠕" : "🠗 Move down";
             }
         }
         public string CurrentMountAxisAzimuthErrorDirection {

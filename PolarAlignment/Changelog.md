@@ -2,6 +2,18 @@
 
 ## Unreleased (MLAstroRPA-BaseOn-16b785e branch)
 
+### Versioning
+- The plugin version continues to follow the upstream TPPA scheme (a single 4-part number, currently `2.2.6.0`).
+- The RPA revision is tracked separately so users can identify this MLAstroRPA edition: `AssemblyInformationalVersion` = `2.2.6.0+RPA.1.0` and assembly metadata `RPAVersion` = `1.0`.
+
+### MLAstroRPA Alt-axis overshoot
+- Added a master **"Enable overshoot"** option for the MLAstroRPA system, plus **"Run overshoot for moving Up"** / **"Run overshoot for moving Down"** checkboxes, each with its own percentage field.
+- When enabled for the on-screen correction direction, the Alt axis correction ratio is raised from the default 75% to the configured overshoot percentage, constrained to 100–150% (100% corrects the full error without overshoot; up to 150% moves up to 50% past the target).
+- The direction used for overshoot selection follows the direction reported on screen by the solve (`CurrentMountAxisAltitudeErrorDirection`), not the motor command direction (which may be flipped by the automated direction correction).
+
+### Removed
+- Removed the **"Log polling data"** checkbox and the serial data logging feature (`LoggingSerialPort` no longer logs TX/RX data lines; only connection lifecycle is logged).
+
 ### MLAstroRPA system integration
 - Added `MLAstroRPA` as a new polar alignment system option alongside None / UPAS / OAPA in the plugin settings ComboBox.
 - Added `UniversalPolarAlignmentMLAstroRPA` — a dedicated driver for the MLAstro Robotic Polar Alignment hardware communicating over serial (USB/WiFi bridge).

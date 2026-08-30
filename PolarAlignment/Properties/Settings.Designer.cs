@@ -518,12 +518,60 @@ namespace NINA.Plugins.PolarAlignment.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool LogPollingData {
+        public bool MLAstroRPAOvershootEnabled {
             get {
-                return ((bool)(this["LogPollingData"]));
+                return ((bool)(this["MLAstroRPAOvershootEnabled"]));
             }
             set {
-                this["LogPollingData"] = value;
+                this["MLAstroRPAOvershootEnabled"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool MLAstroRPAOvershootUp {
+            get {
+                return ((bool)(this["MLAstroRPAOvershootUp"]));
+            }
+            set {
+                this["MLAstroRPAOvershootUp"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public double MLAstroRPAOvershootUpPercent {
+            get {
+                return ((double)(this["MLAstroRPAOvershootUpPercent"]));
+            }
+            set {
+                this["MLAstroRPAOvershootUpPercent"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool MLAstroRPAOvershootDown {
+            get {
+                return ((bool)(this["MLAstroRPAOvershootDown"]));
+            }
+            set {
+                this["MLAstroRPAOvershootDown"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public double MLAstroRPAOvershootDownPercent {
+            get {
+                return ((double)(this["MLAstroRPAOvershootDownPercent"]));
+            }
+            set {
+                this["MLAstroRPAOvershootDownPercent"] = value;
             }
         }
     }

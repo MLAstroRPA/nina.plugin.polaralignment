@@ -52,10 +52,48 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
             }
         }
 
-        public bool LogPollingData {
-            get => Properties.Settings.Default.LogPollingData;
+        public bool MLAstroRPAOvershootEnabled {
+            get => Properties.Settings.Default.MLAstroRPAOvershootEnabled;
             set {
-                Properties.Settings.Default.LogPollingData = value;
+                Properties.Settings.Default.MLAstroRPAOvershootEnabled = value;
+                CoreUtil.SaveSettings(Properties.Settings.Default);
+                RaisePropertyChanged();
+            }
+        }
+
+        public bool MLAstroRPAOvershootUp {
+            get => Properties.Settings.Default.MLAstroRPAOvershootUp;
+            set {
+                Properties.Settings.Default.MLAstroRPAOvershootUp = value;
+                CoreUtil.SaveSettings(Properties.Settings.Default);
+                RaisePropertyChanged();
+            }
+        }
+
+        public double MLAstroRPAOvershootUpPercent {
+            get => Properties.Settings.Default.MLAstroRPAOvershootUpPercent;
+            set {
+                // Overshoot is limited to 100% (full correction, no overshoot) .. 150% (50% past the target).
+                Properties.Settings.Default.MLAstroRPAOvershootUpPercent = Math.Clamp(value, 100, 150);
+                CoreUtil.SaveSettings(Properties.Settings.Default);
+                RaisePropertyChanged();
+            }
+        }
+
+        public bool MLAstroRPAOvershootDown {
+            get => Properties.Settings.Default.MLAstroRPAOvershootDown;
+            set {
+                Properties.Settings.Default.MLAstroRPAOvershootDown = value;
+                CoreUtil.SaveSettings(Properties.Settings.Default);
+                RaisePropertyChanged();
+            }
+        }
+
+        public double MLAstroRPAOvershootDownPercent {
+            get => Properties.Settings.Default.MLAstroRPAOvershootDownPercent;
+            set {
+                // Overshoot is limited to 100% (full correction, no overshoot) .. 150% (50% past the target).
+                Properties.Settings.Default.MLAstroRPAOvershootDownPercent = Math.Clamp(value, 100, 150);
                 CoreUtil.SaveSettings(Properties.Settings.Default);
                 RaisePropertyChanged();
             }

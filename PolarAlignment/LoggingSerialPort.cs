@@ -52,17 +52,7 @@ namespace NINA.Plugins.PolarAlignment {
             inner.DiscardInBuffer();
         }
 
-        private bool lastWriteWasPollingQuery;
-
-        private static bool LogPollingData => Properties.Settings.Default.LogPollingData;
-
-        private bool ShouldLogLine() => !lastWriteWasPollingQuery || LogPollingData;
-
         public void WriteLine(string text) {
-            lastWriteWasPollingQuery = string.Equals(text?.Trim(), "?", StringComparison.Ordinal);
-            if (ShouldLogLine()) {
-                Logger.Info($"[Serial-TX] {inner.PortName}: {text}");
-            }
             try {
                 inner.WriteLine(text);
             } catch (Exception ex) {
@@ -73,30 +63,18 @@ namespace NINA.Plugins.PolarAlignment {
 
         public string ReadLine() {
             try {
-                var line = inner.ReadLine();
-                if (ShouldLogLine()) {
-                    Logger.Info($"[Serial-RX] {inner.PortName}: {line}");
-                }
-                return line;
+                return inner.ReadLine();
             } catch (Exception ex) {
-                if (ShouldLogLine()) {
-                    Logger.Info($"[Serial-RX] {inner.PortName}: read failed: {ex.GetType().Name}: {ex.Message}");
-                }
+                Logger.Info($"[Serial-RX] {inner.PortName}: read failed: {ex.GetType().Name}: {ex.Message}");
                 throw;
             }
         }
 
         public string ReadExisting() {
             try {
-                var data = inner.ReadExisting();
-                if (ShouldLogLine()) {
-                    Logger.Info($"[Serial-RX] {inner.PortName}: {data}");
-                }
-                return data;
+                return inner.ReadExisting();
             } catch (Exception ex) {
-                if (ShouldLogLine()) {
-                    Logger.Info($"[Serial-RX] {inner.PortName}: read failed: {ex.GetType().Name}: {ex.Message}");
-                }
+                Logger.Info($"[Serial-RX] {inner.PortName}: read failed: {ex.GetType().Name}: {ex.Message}");
                 throw;
             }
         }
