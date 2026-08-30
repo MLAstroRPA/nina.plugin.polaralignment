@@ -6,8 +6,8 @@
 
 This MLAstroRPA edition is a fork of the upstream Three Point Polar Alignment (TPPA) plugin, branched from commit `16b785e` of the TPPA `master` branch. At that commit, the upstream TPPA plugin had version number `2.2.5.0`.
 
-- The plugin version continues to follow the upstream TPPA scheme (a single 4-part number, currently `2.2.6.0`).
-- The RPA revision is tracked separately so users can identify this MLAstroRPA edition: `AssemblyInformationalVersion` = `2.2.6.0+RPA.1.0` and assembly metadata `RPAVersion` = `1.0`.
+- The plugin version follows the upstream TPPA scheme and stays at `2.2.5.0` (the version of the upstream commit this fork is based on).
+- The fork identity is exposed through the plugin metadata: `Repository` and `ChangelogURL` point to the MLAstroRPA fork, and the plugin description states that this is a fork of TPPA (with a **Fork page** link).
 
 ### MLAstroRPA Alt-axis overshoot
 - Added a master **"Enable overshoot"** option for the MLAstroRPA system, plus **"Run overshoot for moving Up"** / **"Run overshoot for moving Down"** checkboxes, each with its own arcminute field.

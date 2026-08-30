@@ -175,9 +175,11 @@ namespace NINA.Plugins.PolarAlignment {
                 await activeSystem.NudgeX(azAdjustment, token);
                 lastMovement = new Movement(azAdjustment, 0, azimuthSign, lastMovement?.AltitudeSign ?? 1f, az.Degree, alt.Degree);
             } else {
-                // Correct the full Alt error (100%) plus a fixed overshoot (arcminutes) past the target.
+                // Correct the full Alt error (100%) plus a fixed overshoot (arcminutes) past the
+                // target, always added in the same direction as the correction move.
                 var overshootArcMin = GetAltitudeOvershootArcMin(activeSystem);
-                float altAdjustment = (float)alt.ArcMinutes * altitudeSign + overshootArcMin * altitudeSign;
+                float altAdjustment = (float)alt.ArcMinutes * altitudeSign;
+                altAdjustment += Math.Sign(altAdjustment) * overshootArcMin;
                 progress?.Report(new ApplicationStatus() { Status = $"Nudging along Y axis by {Math.Round(altAdjustment, 2)}" });
                 await activeSystem.NudgeY(altAdjustment, token);
                 lastMovement = new Movement(0, altAdjustment, lastMovement?.AzimuthSign ?? 1f, altitudeSign, az.Degree, alt.Degree);

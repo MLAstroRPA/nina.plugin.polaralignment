@@ -10,16 +10,11 @@
     <Title>Three Point Polar Alignment</Title>
     <Authors>Stefan Berg @isbeorn</Authors>
     <Product>NINA.Plugins</Product>
-    <Description>Three Point Polar Alignment almost anywhere in the sky</Description>
+    <Description>This MLAstroRPA edition is a fork of the upstream Three Point Polar Alignment (TPPA) plugin</Description>
     <Copyright>Copyright ©  2021-2025</Copyright>
-    <Version>2.2.6.0</Version>
-    <InformationalVersion>2.2.6.0+RPA.1.0</InformationalVersion>
+    <Version>2.2.5.0</Version>
+    <InformationalVersion>2.2.5.0</InformationalVersion>
   </PropertyGroup>
-  <ItemGroup>
-    <AssemblyMetadata Include="RPAVersion">
-      <Value>1.0</Value>
-    </AssemblyMetadata>
-  </ItemGroup>
   <ItemGroup>    
     <PackageReference Include="NINA.Plugin" Version="3.1.2.9001" />    
   </ItemGroup>

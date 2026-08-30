@@ -36,10 +36,10 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyMetadata("License", "MPL-2.0")]
 //The url to the license
 [assembly: AssemblyMetadata("LicenseURL", "https://www.mozilla.org/en-US/MPL/2.0/")]
-//The repository where your pluggin is hosted
-[assembly: AssemblyMetadata("Repository", "https://github.com/isbeorn/nina.plugin.polaralignment")]
+//The repository where your plugin is hosted (this is a fork of TPPA)
+[assembly: AssemblyMetadata("Repository", "https://github.com/MLAstroRPA/nina.plugin.polaralignment/tree/MLAstroRPA-BaseOn-16b785e")]
 
-[assembly: AssemblyMetadata("ChangelogURL", "https://github.com/isbeorn/nina.plugin.polaralignment/blob/master/PolarAlignment/Changelog.md")]
+[assembly: AssemblyMetadata("ChangelogURL", "https://github.com/MLAstroRPA/nina.plugin.polaralignment/blob/MLAstroRPA-BaseOn-16b785e/PolarAlignment/Changelog.md")]
 
 //Common tags that quickly describe your plugin
 [assembly: AssemblyMetadata("Tags", "Polar alignment,Sequencer")]
@@ -50,7 +50,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyMetadata("ScreenshotURL", "https://github.com/isbeorn/nina.plugin.polaralignment/blob/master/PolarAlignment/Starlock2.png?raw=true")]
 //An additional example screenshot of your plugin in action
 [assembly: AssemblyMetadata("AltScreenshotURL", "https://github.com/isbeorn/nina.plugin.polaralignment/blob/master/PolarAlignment/Imaging.png?raw=true")]
-[assembly: AssemblyMetadata("LongDescription", @"Three Point Polar Alignment almost anywhere in the sky  
+[assembly: AssemblyMetadata("LongDescription", @"This MLAstroRPA edition is a fork of the upstream Three Point Polar Alignment (TPPA) plugin
 
 A new instruction will be available for the advanced sequencer as well as a new tool pane inside the imaging tab that will assist in polar alignment.  
 
