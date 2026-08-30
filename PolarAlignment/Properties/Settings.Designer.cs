@@ -541,13 +541,13 @@ namespace NINA.Plugins.PolarAlignment.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("100")]
-        public double MLAstroRPAOvershootUpPercent {
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double MLAstroRPAOvershootUpArcMin {
             get {
-                return ((double)(this["MLAstroRPAOvershootUpPercent"]));
+                return ((double)(this["MLAstroRPAOvershootUpArcMin"]));
             }
             set {
-                this["MLAstroRPAOvershootUpPercent"] = value;
+                this["MLAstroRPAOvershootUpArcMin"] = value;
             }
         }
 
@@ -565,13 +565,13 @@ namespace NINA.Plugins.PolarAlignment.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("100")]
-        public double MLAstroRPAOvershootDownPercent {
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public double MLAstroRPAOvershootDownArcMin {
             get {
-                return ((double)(this["MLAstroRPAOvershootDownPercent"]));
+                return ((double)(this["MLAstroRPAOvershootDownArcMin"]));
             }
             set {
-                this["MLAstroRPAOvershootDownPercent"] = value;
+                this["MLAstroRPAOvershootDownArcMin"] = value;
             }
         }
     }

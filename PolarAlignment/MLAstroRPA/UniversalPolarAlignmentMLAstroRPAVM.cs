@@ -70,11 +70,11 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
             }
         }
 
-        public double MLAstroRPAOvershootUpPercent {
-            get => Properties.Settings.Default.MLAstroRPAOvershootUpPercent;
+        public double MLAstroRPAOvershootUpArcMin {
+            get => Properties.Settings.Default.MLAstroRPAOvershootUpArcMin;
             set {
-                // Overshoot is limited to 100% (full correction, no overshoot) .. 150% (50% past the target).
-                Properties.Settings.Default.MLAstroRPAOvershootUpPercent = Math.Clamp(value, 100, 150);
+                // Overshoot is limited to 0 .. 15 arcminutes past the target.
+                Properties.Settings.Default.MLAstroRPAOvershootUpArcMin = Math.Clamp(value, 0, 15);
                 CoreUtil.SaveSettings(Properties.Settings.Default);
                 RaisePropertyChanged();
             }
@@ -89,11 +89,11 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
             }
         }
 
-        public double MLAstroRPAOvershootDownPercent {
-            get => Properties.Settings.Default.MLAstroRPAOvershootDownPercent;
+        public double MLAstroRPAOvershootDownArcMin {
+            get => Properties.Settings.Default.MLAstroRPAOvershootDownArcMin;
             set {
-                // Overshoot is limited to 100% (full correction, no overshoot) .. 150% (50% past the target).
-                Properties.Settings.Default.MLAstroRPAOvershootDownPercent = Math.Clamp(value, 100, 150);
+                // Overshoot is limited to 0 .. 15 arcminutes past the target.
+                Properties.Settings.Default.MLAstroRPAOvershootDownArcMin = Math.Clamp(value, 0, 15);
                 CoreUtil.SaveSettings(Properties.Settings.Default);
                 RaisePropertyChanged();
             }

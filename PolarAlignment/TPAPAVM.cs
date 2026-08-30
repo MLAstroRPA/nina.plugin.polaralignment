@@ -175,8 +175,9 @@ namespace NINA.Plugins.PolarAlignment {
                 await activeSystem.NudgeX(azAdjustment, token);
                 lastMovement = new Movement(azAdjustment, 0, azimuthSign, lastMovement?.AltitudeSign ?? 1f, az.Degree, alt.Degree);
             } else {
-                var ratio = GetAltitudeCorrectionRatio(activeSystem);
-                float altAdjustment = (float)alt.ArcMinutes * altitudeSign * ratio;
+                // Correct the full Alt error (100%) plus a fixed overshoot (arcminutes) past the target.
+                var overshootArcMin = GetAltitudeOvershootArcMin(activeSystem);
+                float altAdjustment = (float)alt.ArcMinutes * altitudeSign + overshootArcMin * altitudeSign;
                 progress?.Report(new ApplicationStatus() { Status = $"Nudging along Y axis by {Math.Round(altAdjustment, 2)}" });
                 await activeSystem.NudgeY(altAdjustment, token);
                 lastMovement = new Movement(0, altAdjustment, lastMovement?.AzimuthSign ?? 1f, altitudeSign, az.Degree, alt.Degree);
@@ -186,38 +187,37 @@ namespace NINA.Plugins.PolarAlignment {
         }
 
         /// <summary>
-        /// Returns the correction ratio applied to the Alt axis move. Normally 0.75 (75%),
-        /// but for the MLAstroRPA system it is raised to the configured overshoot percentage
-        /// when the master "Enable overshoot" switch is on and the checkbox for the current
-        /// (on-screen) correction direction is enabled.
+        /// Returns the fixed Alt-axis overshoot (in arcminutes) added on top of the full
+        /// 100% correction for the MLAstroRPA system. Normally 0 (correct the full error
+        /// with no overshoot), but when the master "Enable overshoot" switch is on and the
+        /// checkbox for the current (on-screen) correction direction is enabled, the
+        /// configured amount (0–15 arcminutes) is moved past the target.
         /// </summary>
-        private float GetAltitudeCorrectionRatio(IPolarAlignmentSystemVM activeSystem) {
+        private float GetAltitudeOvershootArcMin(IPolarAlignmentSystemVM activeSystem) {
             if (!(activeSystem is UniversalPolarAlignmentMLAstroRPAVM)) {
-                return 0.75f;
+                return 0f;
             }
 
-            // When the master "Enable overshoot" switch is off, always use the default 75%.
+            // When the master "Enable overshoot" switch is off, never overshoot.
             if (!Properties.Settings.Default.MLAstroRPAOvershootEnabled) {
-                return 0.75f;
+                return 0f;
             }
 
             // When the checkbox for the current (on-screen) correction direction is off,
-            // also fall back to the default 75%.
+            // also never overshoot.
             var overshootEnabled = PolarErrorDetermination.AltitudeCorrectionIsUp
                 ? Properties.Settings.Default.MLAstroRPAOvershootUp
                 : Properties.Settings.Default.MLAstroRPAOvershootDown;
             if (!overshootEnabled) {
-                return 0.75f;
+                return 0f;
             }
 
-            var percent = PolarErrorDetermination.AltitudeCorrectionIsUp
-                ? Properties.Settings.Default.MLAstroRPAOvershootUpPercent
-                : Properties.Settings.Default.MLAstroRPAOvershootDownPercent;
+            var arcMin = PolarErrorDetermination.AltitudeCorrectionIsUp
+                ? Properties.Settings.Default.MLAstroRPAOvershootUpArcMin
+                : Properties.Settings.Default.MLAstroRPAOvershootDownArcMin;
 
-            // Overshoot is constrained to 100% (correct the full error, no overshoot beyond
-            // the target) up to 150% (move up to 50% past the target).
-            percent = Math.Clamp(percent, 100.0, 150.0);
-            return (float)(percent / 100.0);
+            // Overshoot is constrained to 0 .. 15 arcminutes past the target.
+            return (float)Math.Clamp(arcMin, 0.0, 15.0);
         }
 
         private void CalculateErrorDetails() {
