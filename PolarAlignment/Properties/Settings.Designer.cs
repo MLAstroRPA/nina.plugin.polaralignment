@@ -577,7 +577,7 @@ namespace NINA.Plugins.PolarAlignment.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool MLAstroRPAReverseAzimuth {
             get {
                 return ((bool)(this["MLAstroRPAReverseAzimuth"]));
@@ -589,13 +589,37 @@ namespace NINA.Plugins.PolarAlignment.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool MLAstroRPAReverseAltitude {
             get {
                 return ((bool)(this["MLAstroRPAReverseAltitude"]));
             }
             set {
                 this["MLAstroRPAReverseAltitude"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool MLAstroRPAEnableAutoReverse {
+            get {
+                return ((bool)(this["MLAstroRPAEnableAutoReverse"]));
+            }
+            set {
+                this["MLAstroRPAEnableAutoReverse"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50")]
+        public double MLAstroRPAReverseDetectPercent {
+            get {
+                return ((double)(this["MLAstroRPAReverseDetectPercent"]));
+            }
+            set {
+                this["MLAstroRPAReverseDetectPercent"] = value;
             }
         }
     }

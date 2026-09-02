@@ -120,6 +120,29 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
                 RaisePropertyChanged();
             }
         }
+
+        public override bool EnableAutoReverse {
+            get => Properties.Settings.Default.MLAstroRPAEnableAutoReverse;
+            set {
+                Properties.Settings.Default.MLAstroRPAEnableAutoReverse = value;
+                CoreUtil.SaveSettings(Properties.Settings.Default);
+                RaisePropertyChanged();
+                OnPropertyChanged(nameof(ManualReverseEnabled));
+            }
+        }
+
+        /// <summary>
+        /// Percentage of the full correction moved on the very first nudge while
+        /// auto-reverse is probing the direction (1–100).
+        /// </summary>
+        public double MLAstroRPAReverseDetectPercent {
+            get => Properties.Settings.Default.MLAstroRPAReverseDetectPercent;
+            set {
+                Properties.Settings.Default.MLAstroRPAReverseDetectPercent = Math.Clamp(value, 1, 100);
+                CoreUtil.SaveSettings(Properties.Settings.Default);
+                RaisePropertyChanged();
+            }
+        }
         public override float XBacklashCompensation { get => 0f; set { } }
 
         private async Task TestConnectAsync()

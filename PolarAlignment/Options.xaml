@@ -23,6 +23,8 @@
     <s:String x:Key="MLAstroRPAOvershootEnabledToolTip">When enabled, the Alt axis corrects the full 100% of the error and then moves a fixed overshoot amount past the target for the selected direction(s).</s:String>
     <s:String x:Key="MLAstroRPAOvershootUpToolTip">When the Alt axis must correct upwards (as shown on screen), move the full 100% of the error plus the configured overshoot amount past the target. Range: 0–240 arcminutes (0 = correct the full error with no overshoot).</s:String>
     <s:String x:Key="MLAstroRPAOvershootDownToolTip">When the Alt axis must correct downwards (as shown on screen), move the full 100% of the error plus the configured overshoot amount past the target. Range: 0–240 arcminutes (0 = correct the full error with no overshoot).</s:String>
+    <s:String x:Key="MLAstroRPAEnableAutoReverseToolTip">When enabled, the plugin automatically reverses an axis when it detects the mount moving the wrong way, so the two manual Reverse toggles below are disabled. When disabled (default), only the Reverse Azimuth / Reverse Altitude toggles set the direction.</s:String>
+    <s:String x:Key="MLAstroRPADetectDirectionToolTip">While auto-reverse is enabled, the very first nudge only moves this percentage of the required correction so the plugin can detect whether the axis direction is correct before committing the full move. Range: 1–100 %.</s:String>
     <DataTemplate x:Key="Three Point Polar Alignment_Options">
         <Grid>
             <Grid.RowDefinitions>
@@ -35,6 +37,7 @@
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -317,43 +320,81 @@
                     </ComboBox.ItemsSource>
                 </ComboBox>
                 <TextBlock
+                    Grid.Row="18"
+                    Margin="0,5,0,0"
+                    VerticalAlignment="Center"
+                    Text="Enable auto-reverse"
+                    ToolTip="{StaticResource MLAstroRPAEnableAutoReverseToolTip}"
+                    Visibility="{Binding IsMLAstroRPASelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <CheckBox
+                    Grid.Row="18"
+                    Grid.Column="1"
+                    MinWidth="80"
+                    Margin="0,5,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding ActiveSystem.EnableAutoReverse}"
+                    ToolTip="{StaticResource MLAstroRPAEnableAutoReverseToolTip}"
+                    Visibility="{Binding IsMLAstroRPASelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <TextBlock
                     Grid.Row="19"
+                    Margin="0,5,0,0"
+                    VerticalAlignment="Center"
+                    Text="Detecting direction offset"
+                    ToolTip="{StaticResource MLAstroRPADetectDirectionToolTip}"
+                    Visibility="{Binding IsMLAstroRPASelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <ninactrl:UnitTextBox
+                    Grid.Row="19"
+                    Grid.Column="1"
+                    MinWidth="80"
+                    Margin="0,5,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    IsEnabled="{Binding ActiveSystem.EnableAutoReverse}"
+                    Text="{Binding ActiveSystem.MLAstroRPAReverseDetectPercent}"
+                    ToolTip="{StaticResource MLAstroRPADetectDirectionToolTip}"
+                    Unit="%"
+                    Visibility="{Binding IsMLAstroRPASelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <TextBlock
+                    Grid.Row="20"
                     Margin="0,5,0,0"
                     VerticalAlignment="Center"
                     Text="Reverse Azimuth Axis?"
                     Visibility="{Binding IsSystemSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <CheckBox
-                    Grid.Row="19"
+                    Grid.Row="20"
                     Grid.Column="1"
                     MinWidth="80"
                     Margin="0,5,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
                     IsChecked="{Binding ActiveSystem.ReverseAzimuth}"
+                    IsEnabled="{Binding ActiveSystem.ManualReverseEnabled}"
                     Visibility="{Binding IsSystemSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <TextBlock
-                    Grid.Row="20"
+                    Grid.Row="21"
                     Margin="0,5,0,0"
                     VerticalAlignment="Center"
                     Text="Reverse Altitude Axis?"
                     Visibility="{Binding IsSystemSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <CheckBox
-                    Grid.Row="20"
+                    Grid.Row="21"
                     Grid.Column="1"
                     MinWidth="80"
                     Margin="0,5,0,0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center"
                     IsChecked="{Binding ActiveSystem.ReverseAltitude}"
+                    IsEnabled="{Binding ActiveSystem.ManualReverseEnabled}"
                     Visibility="{Binding IsSystemSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <TextBlock
-                    Grid.Row="21"
+                    Grid.Row="22"
                     Margin="0,5,0,0"
                     VerticalAlignment="Center"
                     Text="Azimuth backlash compensation"
                     Visibility="{Binding IsSystemSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <ninactrl:UnitTextBox
-                    Grid.Row="21"
+                    Grid.Row="22"
                     Grid.Column="1"
                     MinWidth="80"
                     Margin="0,5,0,0"
@@ -363,13 +404,13 @@
                     Unit="steps"
                     Visibility="{Binding IsSystemSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <TextBlock
-                    Grid.Row="22"
+                    Grid.Row="23"
                     Margin="0,5,0,0"
                     VerticalAlignment="Center"
                     Text="Do automated adjustments?"
                     Visibility="{Binding IsSystemSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 <StackPanel
-                    Grid.Row="22"
+                    Grid.Row="23"
                     Grid.Column="1"
                     Orientation="Horizontal">
                     <CheckBox
@@ -388,7 +429,7 @@
                             Visibility="{Binding ActiveSystem.DoAutomatedAdjustments, Converter={StaticResource BooleanToVisibilityConverter}}" />
                     </Grid>
                 </StackPanel>
-                <Grid Grid.Row="23" Visibility="{Binding IsSystemSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid Grid.Row="24" Visibility="{Binding IsSystemSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <TextBlock
                         Margin="0,5,0,0"
                         VerticalAlignment="Center"
@@ -396,7 +437,7 @@
                         Visibility="{Binding ActiveSystem.DoAutomatedAdjustments, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 </Grid>
                 <Grid
-                    Grid.Row="23"
+                    Grid.Row="24"
                     Grid.Column="1"
                     Visibility="{Binding IsSystemSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <ninactrl:UnitTextBox
@@ -409,7 +450,7 @@
                         Visibility="{Binding ActiveSystem.DoAutomatedAdjustments, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 </Grid>
                 <Grid
-                    Grid.Row="24"
+                    Grid.Row="25"
                     Grid.ColumnSpan="2"
                     Visibility="{Binding IsSystemSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <TextBlock
@@ -419,7 +460,7 @@
                         Visibility="{Binding ActiveSystem.DoAutomatedAdjustments, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 </Grid>
                 <Button
-                    Grid.Row="25"
+                    Grid.Row="26"
                     Margin="0,20,0,0"
                     Command="{Binding ResetSettingsCommand}">
                     <TextBlock

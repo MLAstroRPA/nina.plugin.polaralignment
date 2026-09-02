@@ -15,7 +15,9 @@ This MLAstroRPA edition is a fork of the upstream Three Point Polar Alignment (T
 - The direction used for overshoot selection follows the direction reported on screen by the solve (`CurrentMountAxisAltitudeErrorDirection`), not the motor command direction (which may be flipped by the automated direction correction).
 
 ### MLAstroRPA axis direction reversal
-- The **"Reverse Azimuth Axis?"** / **"Reverse Altitude Axis?"** toggles now work for the MLAstroRPA system. They are persisted per axis (`MLAstroRPAReverseAzimuth` / `MLAstroRPAReverseAltitude`) and invert the sign of the corresponding nudge/move command in the same way as the UPAS / OAPA systems.
+- The **"Reverse Azimuth Axis?"** / **"Reverse Altitude Axis?"** toggles now work for the MLAstroRPA system. They are persisted per axis (`MLAstroRPAReverseAzimuth` / `MLAstroRPAReverseAltitude`) and invert the sign of the corresponding nudge/move command in the same way as the UPAS / OAPA systems. Their defaults are now **ON**.
+- Added an **"Enable auto-reverse"** toggle (default OFF) above the two Reverse toggles. When it is ON, the automated correction loop may auto-reverse an axis when it detects the error getting worse, and the two manual Reverse toggles are disabled. When it is OFF (default), the direction is controlled solely by the two Reverse toggles.
+- While auto-reverse is ON, the very first nudge only moves a configurable percentage of the full correction (**"Detecting direction"**, default 50%, range 1–100%) so the plugin can safely probe the correct direction before committing the full move.
 
 ### Removed
 - Removed the **"Log polling data"** checkbox and the serial data logging feature (`LoggingSerialPort` no longer logs TX/RX data lines; only connection lifecycle is logged).

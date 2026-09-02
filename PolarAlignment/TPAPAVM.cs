@@ -154,7 +154,13 @@ namespace NINA.Plugins.PolarAlignment {
 
             var azimuthSign = lastMovement?.AzimuthSign ?? 1f;
             var altitudeSign = lastMovement?.AltitudeSign ?? 1f;
-            if (lastMovement != null) {
+
+            var mlAstroRPA = activeSystem as UniversalPolarAlignmentMLAstroRPAVM;
+            // Auto-reverse is active for the MLAstroRPA system only when its
+            // "Enable auto-reverse" option is on; for the UPAS/OAPA systems the
+            // legacy behaviour (always self-correct when the error gets worse) is kept.
+            var autoReverseActive = mlAstroRPA == null || mlAstroRPA.EnableAutoReverse;
+            if (lastMovement != null && autoReverseActive) {
                 if (lastMovement?.Altitude == 0) {
                     if (lastMovement.Azimuth != 0 && Math.Abs(az.Degree) > Math.Abs(lastMovement.AzimuthErrorBeforeMovement * 1.15d)) {
                         Logger.Info($"Reversing x axis movement as azimuth error is worse than before. Before: {lastMovement.AzimuthErrorBeforeMovement} - After: {az.Degree}");
@@ -168,9 +174,17 @@ namespace NINA.Plugins.PolarAlignment {
                 }
             }
 
+            // While auto-reverse is probing the direction, the very first nudge only runs a
+            // fraction (MLAstroRPAReverseDetectPercent, %) of the full correction so a wrong
+            // guess cannot move the mount far in the wrong direction.
+            var detectFraction = 1f;
+            if (lastMovement == null && mlAstroRPA != null && mlAstroRPA.EnableAutoReverse) {
+                detectFraction = Math.Clamp((float)(mlAstroRPA.MLAstroRPAReverseDetectPercent / 100.0), 0.01f, 1f);
+            }
+
             var xGreaterThanY = Math.Abs(az.Degree) > Math.Abs(alt.Degree);
             if (xGreaterThanY) {
-                float azAdjustment = (float)az.ArcMinutes * azimuthSign * 0.75f;
+                float azAdjustment = (float)az.ArcMinutes * azimuthSign * 0.75f * detectFraction;
                 progress?.Report(new ApplicationStatus() { Status = $"Nudging along X axis by {Math.Round(azAdjustment, 2)}" });
                 await activeSystem.NudgeX(azAdjustment, token);
                 lastMovement = new Movement(azAdjustment, 0, azimuthSign, lastMovement?.AltitudeSign ?? 1f, az.Degree, alt.Degree);
@@ -180,6 +194,7 @@ namespace NINA.Plugins.PolarAlignment {
                 var overshootArcMin = GetAltitudeOvershootArcMin(activeSystem);
                 float altAdjustment = (float)alt.ArcMinutes * altitudeSign;
                 altAdjustment += Math.Sign(altAdjustment) * overshootArcMin;
+                altAdjustment *= detectFraction;
                 progress?.Report(new ApplicationStatus() { Status = $"Nudging along Y axis by {Math.Round(altAdjustment, 2)}" });
                 await activeSystem.NudgeY(altAdjustment, token);
                 lastMovement = new Movement(0, altAdjustment, lastMovement?.AzimuthSign ?? 1f, altitudeSign, az.Degree, alt.Degree);

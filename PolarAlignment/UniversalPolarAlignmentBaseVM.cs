@@ -48,6 +48,14 @@ namespace NINA.Plugins.PolarAlignment {
         public abstract bool ReverseAltitude { get; set; }
         public abstract float XBacklashCompensation { get; set; }
 
+        /// <summary>
+        /// When true, the automated correction loop is allowed to auto-reverse an axis
+        /// when it detects the error is getting worse. When false (default), only the
+        /// manual ReverseAzimuth / ReverseAltitude toggles determine the axis direction.
+        /// </summary>
+        public virtual bool EnableAutoReverse { get => false; set { } }
+        public bool ManualReverseEnabled => !EnableAutoReverse;
+
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(NudgeXCommand))]
         [NotifyCanExecuteChangedFor(nameof(NudgeYCommand))]
@@ -91,7 +99,7 @@ namespace NINA.Plugins.PolarAlignment {
         [RelayCommand(CanExecute = (nameof(IsNotMoving)))]
         public async Task NudgeX(float position, CancellationToken token) {
             try {
-                if (ReverseAzimuth) { position = position * -1; }
+                if (!EnableAutoReverse && ReverseAzimuth) { position = position * -1; }
                 await Application.Current.Dispatcher.BeginInvoke(() => IsNotMoving = false);
 
                 Logger.Info($"Nudging {SystemName} along X axis by {position}");
@@ -112,7 +120,7 @@ namespace NINA.Plugins.PolarAlignment {
         [RelayCommand(CanExecute = (nameof(IsNotMoving)))]
         public async Task NudgeY(float position, CancellationToken token) {
             try {
-                if (ReverseAltitude) { position = position * -1; }
+                if (!EnableAutoReverse && ReverseAltitude) { position = position * -1; }
                 await Application.Current.Dispatcher.BeginInvoke(() => IsNotMoving = false);
 
                 Logger.Info($"Nudging {SystemName} along Y axis by {position}");
@@ -137,7 +145,7 @@ namespace NINA.Plugins.PolarAlignment {
                 await Application.Current.Dispatcher.BeginInvoke(() => IsNotMoving = false);
 
                 var target = TargetPositionX;
-                if (ReverseAzimuth) { target = target * -1; }
+                if (!EnableAutoReverse && ReverseAzimuth) { target = target * -1; }
 
                 Logger.Info($"Moving {SystemName} along X axis to {target}");
                 var lastDirection = upa.XLastDirection;
@@ -171,7 +179,7 @@ namespace NINA.Plugins.PolarAlignment {
                 await Application.Current.Dispatcher.BeginInvoke(() => IsNotMoving = false);
 
                 var target = TargetPositionY;
-                if (ReverseAltitude) { target = target * -1; }
+                if (!EnableAutoReverse && ReverseAltitude) { target = target * -1; }
 
                 Logger.Info($"Moving {SystemName} along Y axis to {target}");
                 await upa.MoveAbsolute(Axis.YAxis, YSpeed, target, token).ConfigureAwait(false);
