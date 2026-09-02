@@ -14,6 +14,9 @@ This MLAstroRPA edition is a fork of the upstream Three Point Polar Alignment (T
 - When enabled for the on-screen correction direction, the Alt axis corrects the full 100% of the error and then moves a fixed overshoot amount past the target, configurable from 0–240 arcminutes (0 = correct the full error with no overshoot).
 - The direction used for overshoot selection follows the direction reported on screen by the solve (`CurrentMountAxisAltitudeErrorDirection`), not the motor command direction (which may be flipped by the automated direction correction).
 
+### MLAstroRPA axis direction reversal
+- The **"Reverse Azimuth Axis?"** / **"Reverse Altitude Axis?"** toggles now work for the MLAstroRPA system. They are persisted per axis (`MLAstroRPAReverseAzimuth` / `MLAstroRPAReverseAltitude`) and invert the sign of the corresponding nudge/move command in the same way as the UPAS / OAPA systems.
+
 ### Removed
 - Removed the **"Log polling data"** checkbox and the serial data logging feature (`LoggingSerialPort` no longer logs TX/RX data lines; only connection lifecycle is logged).
 

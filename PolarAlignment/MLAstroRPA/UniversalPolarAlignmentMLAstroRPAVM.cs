@@ -103,8 +103,23 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
         public override int XSpeed { get => 1; set { } }
         public override float YGearRatio { get => 1f; set { } }
         public override int YSpeed { get => 1; set { } }
-        public override bool ReverseAzimuth { get => false; set { } }
-        public override bool ReverseAltitude { get => false; set { } }
+        public override bool ReverseAzimuth {
+            get => Properties.Settings.Default.MLAstroRPAReverseAzimuth;
+            set {
+                Properties.Settings.Default.MLAstroRPAReverseAzimuth = value;
+                CoreUtil.SaveSettings(Properties.Settings.Default);
+                RaisePropertyChanged();
+            }
+        }
+
+        public override bool ReverseAltitude {
+            get => Properties.Settings.Default.MLAstroRPAReverseAltitude;
+            set {
+                Properties.Settings.Default.MLAstroRPAReverseAltitude = value;
+                CoreUtil.SaveSettings(Properties.Settings.Default);
+                RaisePropertyChanged();
+            }
+        }
         public override float XBacklashCompensation { get => 0f; set { } }
 
         private async Task TestConnectAsync()

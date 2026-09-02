@@ -574,5 +574,29 @@ namespace NINA.Plugins.PolarAlignment.Properties {
                 this["MLAstroRPAOvershootDownArcMin"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool MLAstroRPAReverseAzimuth {
+            get {
+                return ((bool)(this["MLAstroRPAReverseAzimuth"]));
+            }
+            set {
+                this["MLAstroRPAReverseAzimuth"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool MLAstroRPAReverseAltitude {
+            get {
+                return ((bool)(this["MLAstroRPAReverseAltitude"]));
+            }
+            set {
+                this["MLAstroRPAReverseAltitude"] = value;
+            }
+        }
     }
 }
