@@ -182,9 +182,16 @@ namespace NINA.Plugins.PolarAlignment {
                 detectFraction = Math.Clamp((float)(mlAstroRPA.MLAstroRPAReverseDetectPercent / 100.0), 0.01f, 1f);
             }
 
+            // Safety factor applied to the correction move size: 100% = full error,
+            // 75% (default) = only 75% of the measured error. MLAstroRPA can configure it.
+            var correctionFactor = 0.75f;
+            if (mlAstroRPA != null) {
+                correctionFactor = Math.Clamp((float)(mlAstroRPA.MLAstroRPACorrectionFactorPercent / 100.0), 0.01f, 1f);
+            }
+
             var xGreaterThanY = Math.Abs(az.Degree) > Math.Abs(alt.Degree);
             if (xGreaterThanY) {
-                float azAdjustment = (float)az.ArcMinutes * azimuthSign * 0.75f * detectFraction;
+                float azAdjustment = (float)az.ArcMinutes * azimuthSign * correctionFactor * detectFraction;
                 progress?.Report(new ApplicationStatus() { Status = $"Nudging along Az axis by {Math.Round(azAdjustment, 2)}" });
                 await activeSystem.NudgeX(azAdjustment, token);
                 lastMovement = new Movement(azAdjustment, 0, azimuthSign, lastMovement?.AltitudeSign ?? 1f, az.Degree, alt.Degree);
@@ -192,14 +199,14 @@ namespace NINA.Plugins.PolarAlignment {
                 // Alt-axis correction. When overshoot is enabled for the current (on-screen)
                 // correction direction, move the full 100% of the error plus the configured
                 // overshoot past the target. Otherwise (master "Enable overshoot" off, or the
-                // direction's "Run overshoot" checkbox off) correct only 75% of the error,
-                // matching the conservative Azimuth-axis factor.
+                // direction's "Run overshoot" checkbox off) correct only the configured safety
+                // factor of the error (default 75%), matching the Azimuth-axis factor.
                 var altOvershootEnabled = IsAltitudeOvershootEnabled(activeSystem);
                 float altAdjustment = (float)alt.ArcMinutes * altitudeSign;
                 if (altOvershootEnabled) {
                     altAdjustment += Math.Sign(altAdjustment) * GetAltitudeOvershootArcMin(activeSystem);
                 } else {
-                    altAdjustment *= 0.75f;
+                    altAdjustment *= correctionFactor;
                 }
                 altAdjustment *= detectFraction;
                 progress?.Report(new ApplicationStatus() { Status = $"Nudging along Alt axis by {Math.Round(altAdjustment, 2)}" });

@@ -622,5 +622,17 @@ namespace NINA.Plugins.PolarAlignment.Properties {
                 this["MLAstroRPAReverseDetectPercent"] = value;
             }
         }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("75")]
+        public double MLAstroRPACorrectionFactorPercent {
+            get {
+                return ((double)(this["MLAstroRPACorrectionFactorPercent"]));
+            }
+            set {
+                this["MLAstroRPACorrectionFactorPercent"] = value;
+            }
+        }
     }
 }

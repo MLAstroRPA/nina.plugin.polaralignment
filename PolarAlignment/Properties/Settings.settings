@@ -152,5 +152,8 @@
     <Setting Name="MLAstroRPAReverseDetectPercent" Type="System.Double" Scope="User">
       <Value Profile="(Default)">50</Value>
     </Setting>
+    <Setting Name="MLAstroRPACorrectionFactorPercent" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">75</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -143,6 +143,20 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
                 RaisePropertyChanged();
             }
         }
+
+        /// <summary>
+        /// Safety factor (in percent) applied to automated correction moves: the Azimuth
+        /// axis always, and the Altitude axis when overshoot is not used for the current
+        /// direction. 75 = correct 75% (0.75) of the measured error, 100 = full error.
+        /// </summary>
+        public double MLAstroRPACorrectionFactorPercent {
+            get => Properties.Settings.Default.MLAstroRPACorrectionFactorPercent;
+            set {
+                Properties.Settings.Default.MLAstroRPACorrectionFactorPercent = Math.Clamp(value, 1, 100);
+                CoreUtil.SaveSettings(Properties.Settings.Default);
+                RaisePropertyChanged();
+            }
+        }
         public override float XBacklashCompensation { get => 0f; set { } }
 
         private async Task TestConnectAsync()
