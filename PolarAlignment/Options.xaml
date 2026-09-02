@@ -21,8 +21,8 @@
     <s:String x:Key="AlignmentSystemConnectToolTip">Creates the selected hardware system, scans available serial ports for a matching device, and starts status polling.</s:String>
     <s:String x:Key="AlignmentSystemDisconnectToolTip">Disposes the current hardware connection and stops status polling.</s:String>
     <s:String x:Key="MLAstroRPAOvershootEnabledToolTip">When enabled, the Alt axis corrects the full 100% of the error and then moves a fixed overshoot amount past the target for the selected direction(s).</s:String>
-    <s:String x:Key="MLAstroRPAOvershootUpToolTip">When the Alt axis must correct upwards (as shown on screen), move the full 100% of the error plus the configured overshoot amount past the target. Range: 0–15 arcminutes (0 = correct the full error with no overshoot).</s:String>
-    <s:String x:Key="MLAstroRPAOvershootDownToolTip">When the Alt axis must correct downwards (as shown on screen), move the full 100% of the error plus the configured overshoot amount past the target. Range: 0–15 arcminutes (0 = correct the full error with no overshoot).</s:String>
+    <s:String x:Key="MLAstroRPAOvershootUpToolTip">When the Alt axis must correct upwards (as shown on screen), move the full 100% of the error plus the configured overshoot amount past the target. Range: 0–240 arcminutes (0 = correct the full error with no overshoot).</s:String>
+    <s:String x:Key="MLAstroRPAOvershootDownToolTip">When the Alt axis must correct downwards (as shown on screen), move the full 100% of the error plus the configured overshoot amount past the target. Range: 0–240 arcminutes (0 = correct the full error with no overshoot).</s:String>
     <DataTemplate x:Key="Three Point Polar Alignment_Options">
         <Grid>
             <Grid.RowDefinitions>

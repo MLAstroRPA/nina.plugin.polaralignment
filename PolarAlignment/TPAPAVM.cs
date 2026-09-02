@@ -193,7 +193,7 @@ namespace NINA.Plugins.PolarAlignment {
         /// 100% correction for the MLAstroRPA system. Normally 0 (correct the full error
         /// with no overshoot), but when the master "Enable overshoot" switch is on and the
         /// checkbox for the current (on-screen) correction direction is enabled, the
-        /// configured amount (0–15 arcminutes) is moved past the target.
+        /// configured amount (0–240 arcminutes) is moved past the target.
         /// </summary>
         private float GetAltitudeOvershootArcMin(IPolarAlignmentSystemVM activeSystem) {
             if (!(activeSystem is UniversalPolarAlignmentMLAstroRPAVM)) {
@@ -218,8 +218,8 @@ namespace NINA.Plugins.PolarAlignment {
                 ? Properties.Settings.Default.MLAstroRPAOvershootUpArcMin
                 : Properties.Settings.Default.MLAstroRPAOvershootDownArcMin;
 
-            // Overshoot is constrained to 0 .. 15 arcminutes past the target.
-            return (float)Math.Clamp(arcMin, 0.0, 15.0);
+            // Overshoot is constrained to 0 .. 240 arcminutes past the target.
+            return (float)Math.Clamp(arcMin, 0.0, 240.0);
         }
 
         private void CalculateErrorDetails() {
