@@ -185,7 +185,7 @@ namespace NINA.Plugins.PolarAlignment {
             var xGreaterThanY = Math.Abs(az.Degree) > Math.Abs(alt.Degree);
             if (xGreaterThanY) {
                 float azAdjustment = (float)az.ArcMinutes * azimuthSign * 0.75f * detectFraction;
-                progress?.Report(new ApplicationStatus() { Status = $"Nudging along X axis by {Math.Round(azAdjustment, 2)}" });
+                progress?.Report(new ApplicationStatus() { Status = $"Nudging along Az axis by {Math.Round(azAdjustment, 2)}" });
                 await activeSystem.NudgeX(azAdjustment, token);
                 lastMovement = new Movement(azAdjustment, 0, azimuthSign, lastMovement?.AltitudeSign ?? 1f, az.Degree, alt.Degree);
             } else {
@@ -195,7 +195,7 @@ namespace NINA.Plugins.PolarAlignment {
                 float altAdjustment = (float)alt.ArcMinutes * altitudeSign;
                 altAdjustment += Math.Sign(altAdjustment) * overshootArcMin;
                 altAdjustment *= detectFraction;
-                progress?.Report(new ApplicationStatus() { Status = $"Nudging along Y axis by {Math.Round(altAdjustment, 2)}" });
+                progress?.Report(new ApplicationStatus() { Status = $"Nudging along Alt axis by {Math.Round(altAdjustment, 2)}" });
                 await activeSystem.NudgeY(altAdjustment, token);
                 lastMovement = new Movement(0, altAdjustment, lastMovement?.AzimuthSign ?? 1f, altitudeSign, az.Degree, alt.Degree);
             }
