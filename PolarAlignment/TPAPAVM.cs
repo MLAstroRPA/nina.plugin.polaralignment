@@ -189,11 +189,18 @@ namespace NINA.Plugins.PolarAlignment {
                 await activeSystem.NudgeX(azAdjustment, token);
                 lastMovement = new Movement(azAdjustment, 0, azimuthSign, lastMovement?.AltitudeSign ?? 1f, az.Degree, alt.Degree);
             } else {
-                // Correct the full Alt error (100%) plus a fixed overshoot (arcminutes) past the
-                // target, always added in the same direction as the correction move.
-                var overshootArcMin = GetAltitudeOvershootArcMin(activeSystem);
+                // Alt-axis correction. When overshoot is enabled for the current (on-screen)
+                // correction direction, move the full 100% of the error plus the configured
+                // overshoot past the target. Otherwise (master "Enable overshoot" off, or the
+                // direction's "Run overshoot" checkbox off) correct only 75% of the error,
+                // matching the conservative Azimuth-axis factor.
+                var altOvershootEnabled = IsAltitudeOvershootEnabled(activeSystem);
                 float altAdjustment = (float)alt.ArcMinutes * altitudeSign;
-                altAdjustment += Math.Sign(altAdjustment) * overshootArcMin;
+                if (altOvershootEnabled) {
+                    altAdjustment += Math.Sign(altAdjustment) * GetAltitudeOvershootArcMin(activeSystem);
+                } else {
+                    altAdjustment *= 0.75f;
+                }
                 altAdjustment *= detectFraction;
                 progress?.Report(new ApplicationStatus() { Status = $"Nudging along Alt axis by {Math.Round(altAdjustment, 2)}" });
                 await activeSystem.NudgeY(altAdjustment, token);
@@ -204,28 +211,37 @@ namespace NINA.Plugins.PolarAlignment {
         }
 
         /// <summary>
-        /// Returns the fixed Alt-axis overshoot (in arcminutes) added on top of the full
-        /// 100% correction for the MLAstroRPA system. Normally 0 (correct the full error
-        /// with no overshoot), but when the master "Enable overshoot" switch is on and the
-        /// checkbox for the current (on-screen) correction direction is enabled, the
-        /// configured amount (0–240 arcminutes) is moved past the target.
+        /// Returns whether the Alt-axis overshoot feature is active for the current
+        /// (on-screen) correction direction of the MLAstroRPA system: the master
+        /// "Enable overshoot" switch must be on and the "Run overshoot" checkbox for the
+        /// current correction direction must be enabled.
         /// </summary>
-        private float GetAltitudeOvershootArcMin(IPolarAlignmentSystemVM activeSystem) {
+        private bool IsAltitudeOvershootEnabled(IPolarAlignmentSystemVM activeSystem) {
             if (!(activeSystem is UniversalPolarAlignmentMLAstroRPAVM)) {
-                return 0f;
+                return false;
             }
 
             // When the master "Enable overshoot" switch is off, never overshoot.
             if (!Properties.Settings.Default.MLAstroRPAOvershootEnabled) {
-                return 0f;
+                return false;
             }
 
             // When the checkbox for the current (on-screen) correction direction is off,
             // also never overshoot.
-            var overshootEnabled = PolarErrorDetermination.AltitudeCorrectionIsUp
+            return PolarErrorDetermination.AltitudeCorrectionIsUp
                 ? Properties.Settings.Default.MLAstroRPAOvershootUp
                 : Properties.Settings.Default.MLAstroRPAOvershootDown;
-            if (!overshootEnabled) {
+        }
+
+        /// <summary>
+        /// Returns the fixed Alt-axis overshoot (in arcminutes) added on top of the full
+        /// 100% correction for the MLAstroRPA system, when overshoot is enabled for the
+        /// current (on-screen) correction direction. The configured amount (0–240
+        /// arcminutes, 0 = correct the full error with no overshoot) is moved past the
+        /// target. Returns 0 when overshoot is not active for the current direction.
+        /// </summary>
+        private float GetAltitudeOvershootArcMin(IPolarAlignmentSystemVM activeSystem) {
+            if (!IsAltitudeOvershootEnabled(activeSystem)) {
                 return 0f;
             }
 

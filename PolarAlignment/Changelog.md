@@ -12,6 +12,7 @@ This MLAstroRPA edition is a fork of the upstream Three Point Polar Alignment (T
 ### MLAstroRPA Alt-axis overshoot
 - Added a master **"Enable overshoot"** option for the MLAstroRPA system, plus **"Run overshoot for moving Up"** / **"Run overshoot for moving Down"** checkboxes, each with its own arcminute field.
 - When enabled for the on-screen correction direction, the Alt axis corrects the full 100% of the error and then moves a fixed overshoot amount past the target, configurable from 0–240 arcminutes (0 = correct the full error with no overshoot).
+- When overshoot is **not** active for the current correction direction (master **"Enable overshoot"** off, or the direction's **"Run overshoot"** checkbox off), the Alt axis corrects only **75%** of the error (same factor as the Azimuth axis) instead of the full 100%.
 - The direction used for overshoot selection follows the direction reported on screen by the solve (`CurrentMountAxisAltitudeErrorDirection`), not the motor command direction (which may be flipped by the automated direction correction).
 
 ### MLAstroRPA axis direction reversal
