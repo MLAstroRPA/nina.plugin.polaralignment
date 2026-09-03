@@ -13,7 +13,7 @@
     <Title>Three Point Polar Alignment</Title>
     <Authors>Stefan Berg @isbeorn</Authors>
     <Product>NINA.Plugins</Product>
-    <Description>MLAstroRPA version: 2.0.0.5
+    <Description>MLAstroRPA version: 2.0.0.6
 This MLAstroRPA edition is a fork of the upstream Three Point Polar Alignment (TPPA) plugin</Description>
     <Copyright>Copyright ©  2021-2025</Copyright>
     <Version>2.2.5.0</Version>
