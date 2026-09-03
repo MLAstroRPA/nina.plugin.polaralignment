@@ -315,8 +315,6 @@
                     <ComboBox.ItemsSource>
                         <x:Array Type="{x:Type local:PolarAlignmentSystemType}">
                             <local:PolarAlignmentSystemType>None</local:PolarAlignmentSystemType>
-                            <local:PolarAlignmentSystemType>UPAS</local:PolarAlignmentSystemType>
-                            <local:PolarAlignmentSystemType>OAPA</local:PolarAlignmentSystemType>
                             <local:PolarAlignmentSystemType>MLAstroRPA</local:PolarAlignmentSystemType>
                         </x:Array>
                     </ComboBox.ItemsSource>
