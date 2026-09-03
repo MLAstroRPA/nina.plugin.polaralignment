@@ -5,6 +5,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -33,6 +34,22 @@ namespace NINA.Plugins.PolarAlignment {
                 "MLAstroRPA" => UniversalPolarAlignmentMLAstroRPAVM,
                 _ => null
             };
+
+        /// <summary>
+        /// Handler do DockablePolarAlignmentVM đăng ký để dừng toàn bộ routine PA
+        /// (hủy executeCTS) khi có yêu cầu dừng từ bên ngoài (plugin MLAstro).
+        /// </summary>
+        public static Action ExternalStopHandler { get; set; }
+
+        /// <summary>
+        /// API dừng dành cho plugin ngoài (MLAstro) - cùng process NINA - gọi qua reflection
+        /// hoặc qua kênh stop của MLAstro: dừng driver đang chạy + hủy routine PA của Dockable.
+        /// </summary>
+        public static void RequestStopFromExternal(string reason) {
+            try { Logger.Info($"[TPPA] External STOP requested: {reason}"); } catch { }
+            try { ActiveAlignmentSystemVM?.Abort(CancellationToken.None); } catch (Exception) { }
+            try { ExternalStopHandler?.Invoke(); } catch (Exception) { }
+        }
 
         public PolarAlignmentSystemType SelectedPolarAlignmentSystem {
             get {

@@ -56,9 +56,7 @@ A new instruction will be available for the advanced sequencer as well as a new 
 
 When the instruction is called from within the sequencer, a new window will be visible, that will guide you through the process.   
 Inside the imaging tab there will be a button inside the tool pane to show the polar alignment assistant with parameters and a button to start the process.  
-
-[*Frequently Asked Questions*](https://github.com/isbeorn/nina.plugin.polaralignment/blob/master/PolarAlignment/FAQ.md)
-
+ 
 *Prerequisites*  
 * Latitude and Longitude has to be set in options. You can use [www.latlong.net](https://www.latlong.net/) to easily determine your location.
 * Camera has to be connected and ready

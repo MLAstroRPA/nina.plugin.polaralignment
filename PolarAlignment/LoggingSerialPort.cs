@@ -7,7 +7,7 @@ namespace NINA.Plugins.PolarAlignment {
     /// Wraps <see cref="SerialPort"/> and logs every byte/line written and read so
     /// all serial traffic can be diagnosed from the NINA log.
     /// </summary>
-    public sealed class LoggingSerialPort : IDisposable {
+    public sealed class LoggingSerialPort : ISerialLink {
         private readonly SerialPort inner;
 
         public LoggingSerialPort() {

@@ -832,7 +832,7 @@ namespace NINA.Plugins.PolarAlignment.Instructions {
 
                             progress?.Report(new ApplicationStatus() { Status = "Moving to next point", MaxProgress = (int)moveDistance, Progress = distance, ProgressType = ApplicationStatus.StatusProgressType.ValueOfMaxValue });
                         }
-                    } catch (OperationCanceledException ex) {
+                    } catch (OperationCanceledException) {
                         // Rethrow cancellation when parent token is cancelled
                         if (token.IsCancellationRequested) {
                             throw;
@@ -850,7 +850,7 @@ namespace NINA.Plugins.PolarAlignment.Instructions {
                 SetTrackingSidereal(true);
 
                 progress?.Report(new ApplicationStatus() { Status = string.Empty });
-            } catch (Exception ex) {
+            } catch (Exception) {
                 //Reset move rate in case of problems or early cancellation
                 telescopeMediator.MoveAxis(Core.Enum.TelescopeAxes.Primary, 0);
                 throw;

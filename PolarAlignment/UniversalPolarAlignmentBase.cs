@@ -8,7 +8,9 @@ using System.Threading.Tasks;
 
 namespace NINA.Plugins.PolarAlignment {
     public abstract partial class UniversalPolarAlignmentBase : IPolarAlignmentSystem {
-        private readonly LoggingSerialPort port;
+        // port có thể là: LoggingSerialPort (TPPA tự mở, fallback) hoặc SharedMlastroSerial
+        // (dùng CHUNG cổng với plugin MLAstro — MLAstro là chủ cổng).
+        protected ISerialLink port;
         protected bool IsExpectingStatusResponse { get; set; } = false;
 
         protected abstract string SystemName { get; }
@@ -19,13 +21,13 @@ namespace NINA.Plugins.PolarAlignment {
         protected virtual string StatusQueryCommand => "?";
         protected virtual int StatusResponseLineCount => 2;
 
-        protected virtual void OnPortOpened(LoggingSerialPort serialPort) { }
+        protected virtual void OnPortOpened(ISerialLink serialPort) { }
 
         protected virtual bool IsStatusResponseValid(string status) {
             return GetStatusRegex().Match(status).Success;
         }
 
-        protected virtual string ReadStatusResponse(LoggingSerialPort serialPort) {
+        protected virtual string ReadStatusResponse(ISerialLink serialPort) {
             var status = serialPort.ReadLine();
             for (int i = 1; i < StatusResponseLineCount; i++) {
                 _ = serialPort.ReadLine();
@@ -35,9 +37,32 @@ namespace NINA.Plugins.PolarAlignment {
 
         protected abstract Regex GetStatusRegex();
 
-        protected LoggingSerialPort Port => port;
+        protected ISerialLink Port => port;
 
+        /// <summary>Chế độ mặc định (Avalon/OAPA/...): tự quét & mở cổng như trước đây.</summary>
         protected UniversalPolarAlignmentBase() {
+            OpenAndValidate();
+        }
+
+        /// <summary>
+        /// deferOpen = true: KHÔNG tự mở ở ctor để subclass chọn lúc mở.
+        /// (UniversalPolarAlignmentMLAstroRPA dùng để ưu tiên "dùng chung cổng với MLAstro",
+        /// không có MLAstro thì tự quét như cũ.)
+        /// </summary>
+        protected UniversalPolarAlignmentBase(bool deferOpen) {
+        }
+
+        /// <summary>Gắn một transport đã mở sẵn (vd phiên dùng chung với plugin MLAstro).
+        /// (Không gọi virtual UpdateStatus() ở đây để tránh dispatch sớm khi còn trong base ctor;
+        /// subclass gọi UpdateStatus() sau khi dựng xong.)</summary>
+        protected UniversalPolarAlignmentBase(ISerialLink openedPort) {
+            port = openedPort;
+        }
+
+        protected void AttachPort(ISerialLink openedPort) => port = openedPort;
+
+        /// <summary>Quét toàn bộ cổng COM, mở cổng nói chuyện được với thiết bị rồi đọc trạng thái.</summary>
+        protected void OpenAndValidate() {
             var comPorts = SerialPort.GetPortNames();
             foreach (var comPort in comPorts) {
                 var serialPortToTest = new LoggingSerialPort() {
@@ -271,7 +296,7 @@ namespace NINA.Plugins.PolarAlignment {
             return false;
         }
 
-        private static string ReadStatusLine(LoggingSerialPort serialPort) {
+        private static string ReadStatusLine(ISerialLink serialPort) {
             var status = serialPort.ReadLine();
             if (string.IsNullOrWhiteSpace(status) ||
                 string.Equals(status.Trim(), "ok", StringComparison.OrdinalIgnoreCase)) {

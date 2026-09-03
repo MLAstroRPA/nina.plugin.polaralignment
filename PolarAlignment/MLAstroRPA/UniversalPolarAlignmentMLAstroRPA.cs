@@ -11,6 +11,57 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
         private readonly object alignmentSync = new();
         private TaskCompletionSource<string> alignmentCompletionSource;
 
+        /// <summary>
+        /// Ưu tiên dùng CHUNG cổng COM với plugin MLAstro (MLAstro là CHỦ cổng, cùng process NINA).
+        /// Nếu MLAstro chưa cài / chưa nạp thì TPPA tự quét &amp; mở cổng riêng (fallback như trước).
+        /// </summary>
+        public UniversalPolarAlignmentMLAstroRPA() : base(deferOpen: true) {
+            if (!TryOpenPreferred()) {
+                throw new Exception($"Unable to find {SystemName}");
+            }
+        }
+
+        private bool TryOpenPreferred() {
+            try {
+                var link = MLAstroLink.TryCreate();
+                if (link != null && !string.IsNullOrWhiteSpace(link.ConfiguredComPort)) {
+                    var shared = new SharedMlastroSerial(link);
+                    shared.StopRequested += OnExternalStop;   // MLAstro bấm STOP/E-STOP -> dừng PA
+                    shared.Open();   // ném exception nếu không mở được -> rơi xuống catch -> fallback
+                    AttachPort(shared);
+                    UpdateStatus();
+                    if (Connected && !string.IsNullOrWhiteSpace(Status)) {
+                        Logger.Info($"[MLAstroRPA] Connected through MLAstro plugin on {link.ConfiguredComPort}");
+                        return true;
+                    }
+                    Logger.Info("[MLAstroRPA] MLAstro shared session not usable; falling back to direct scan.");
+                    try { shared.Close(); } catch { }
+                }
+            } catch (Exception ex) {
+                Logger.Error($"[MLAstroRPA] Shared connect via MLAstro failed ({ex.Message}); falling back to direct scan.");
+            }
+            // Fallback: không có MLAstro plugin -> TPPA tự mở cổng như cũ.
+            port = null;   // để OpenAndValidate() báo lỗi đúng nếu không tìm thấy thiết bị
+            OpenAndValidate();
+            return port != null;
+        }
+
+        /// <summary>MLAstro báo STOP/E-STOP (hoặc ngắt) giữa chừng -> hủy PA đang chạy ngay.</summary>
+        private void OnExternalStop() {
+            Logger.Info("[MLAstroRPA] Aborting PA because MLAstro requested STOP.");
+            try {
+                if (Port?.IsOpen == true) Port.WriteLine("STOP:1");
+            } catch (Exception ex) {
+                Logger.Error($"[MLAstroRPA] External STOP send failed: {ex.Message}");
+            }
+            TaskCompletionSource<string> completionSource;
+            lock (alignmentSync) {
+                completionSource = alignmentCompletionSource;
+                alignmentCompletionSource = null;
+            }
+            completionSource?.TrySetException(new OperationCanceledException("PA aborted by MLAstro STOP."));
+        }
+
         protected override string SystemName => "MLAstroRPA";
         protected override string NewLineSequence => "\n";
         protected override int ScanReadTimeout => 300;
@@ -20,7 +71,7 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
         // and finally a metadata line. Read three lines and return the meaningful status.
         protected override int StatusResponseLineCount => 3;
 
-        protected override string ReadStatusResponse(LoggingSerialPort serialPort)
+        protected override string ReadStatusResponse(ISerialLink serialPort)
         {
             try
             {
@@ -210,7 +261,7 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
 
         protected override Regex GetStatusRegex() => StatusRegex();
 
-        protected override void OnPortOpened(LoggingSerialPort serialPort) {
+        protected override void OnPortOpened(ISerialLink serialPort) {
             serialPort.WriteLine("[MLAstroRPA-TC]");
             var response = serialPort.ReadLine();
             var firstToken = response?.Trim().Split(',')[0];
@@ -432,7 +483,11 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA {
         // so interface dispatch reaches this implementation instead of the inherited base one.
         void IDisposable.Dispose() {
             try {
-                if (Port?.IsOpen == true) {
+                // Khi dùng CHUNG cổng với MLAstro (SharedMlastroSerial): KHÔNG gửi "Disconnect"
+                // cho firmware - MLAstro vẫn là chủ và còn điều khiển thiết bị. Nếu gửi Disconnect,
+                // firmware nhả handshake nên lần mở lại qua MLAstro sẽ không điều khiển được.
+                // Chỉ gửi "Disconnect" khi TPPA TỰ mở cổng (fallback, không có MLAstro plugin).
+                if (Port?.IsOpen == true && !(Port is SharedMlastroSerial)) {
                     Logger.Info("[MLAstroRPA] Sending Disconnect command to firmware");
                     Port.WriteLine("Disconnect");
                     // Give the firmware a moment to stop motors and release the handshake

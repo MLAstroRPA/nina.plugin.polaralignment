@@ -85,15 +85,28 @@ namespace NINA.Plugins.PolarAlignment {
 
         [RelayCommand]
         public void Disconnect() {
-            if (upa?.Connected != true) { return; }
+            // QUAN TRỌNG: không return sớm khi upa.Connected == false. Khi MLAstro đóng cổng,
+            // link đã mất nên upa.Connected = false - nhưng VM vẫn phải set Connected=false,
+            // dispose hệ thống và cho phép Connect tạo lại lần sau.
+            if (upa == null) { return; }
+            var wasConnected = upa.Connected;
             Connected = false;
             try {
+                // Dừng routine PA đang chạy (nếu có) trước khi thả quyền điều khiển.
+                try { PolarAlignmentPlugin.RequestStopFromExternal($"TPPA disconnect ({SystemName})"); } catch (Exception) { }
                 pollCts?.Cancel();
-                upa.Dispose();
+                try { upa.Dispose(); } catch (Exception ex) { Logger.Error(ex); }
             } catch (Exception ex) {
                 Logger.Error(ex);
+            } finally {
+                upa = null; // để Connect tạo lại hệ thống mới lần sau
             }
-            Notification.ShowInformation($"Disconnected from {SystemName}");
+            // Chỉ báo "Disconnected" khi là thao tác ngắt CHỦ ĐỘNG lúc link còn sống (wasConnected == true).
+            // Nếu link đã mất do MLAstro plugin ngắt (wasConnected == false) thì SharedMlastroSerial đã
+            // hiện notification nêu rõ nguyên nhân "do MLAstro plugin" - không hiện toast trùng nữa.
+            if (wasConnected) {
+                Notification.ShowInformation($"Disconnected from {SystemName}");
+            }
         }
 
         [RelayCommand(CanExecute = (nameof(IsNotMoving)))]
@@ -210,7 +223,21 @@ namespace NINA.Plugins.PolarAlignment {
             var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(300));
             try {
                 while (await timer.WaitForNextTickAsync(token) && !token.IsCancellationRequested) {
-                    await upa.RefreshStatus(token);
+                    bool lost = false;
+                    try {
+                        await upa.RefreshStatus(token);
+                    } catch (OperationCanceledException) when (token.IsCancellationRequested) {
+                        break;
+                    } catch {
+                        lost = true; // mất kết nối trong lúc đọc (vd MLAstro đóng cổng)
+                    }
+                    if (lost || !upa.Connected) {
+                        // Liên kết bị mất (vd MLAstro plugin Disconnect khi đang dùng chung cổng):
+                        // TPPA phải tự Disconnect + dừng PA.
+                        Logger.Info($"[{SystemName}] Connection lost - auto disconnecting.");
+                        Application.Current?.Dispatcher?.BeginInvoke(new Action(Disconnect));
+                        break;
+                    }
                     PositionX = upa.XPosition1;
                     PositionY = upa.YPosition1;
                 }

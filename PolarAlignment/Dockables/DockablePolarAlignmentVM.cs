@@ -81,6 +81,12 @@ namespace NINA.Plugins.PolarAlignment.Dockables {
                 try { _ = PolarAlignmentPlugin.ActiveAlignmentSystemVM?.Abort(CancellationToken.None); } catch (Exception) { }
                 try { executeCTS?.Cancel(); } catch (Exception) { }
             });
+
+            // Đăng ký để plugin ngoài (MLAstro) có thể dừng routine PA qua PolarizationPlugin.RequestStopFromExternal.
+            PolarAlignmentPlugin.ExternalStopHandler = () => {
+                try { _ = PolarAlignmentPlugin.ActiveAlignmentSystemVM?.Abort(CancellationToken.None); } catch (Exception) { }
+                try { executeCTS?.Cancel(); } catch (Exception) { }
+            };
             
             messageBroker.Subscribe(StartAlignmentTopic, this);
             messageBroker.Subscribe(StopAlignmentTopic, this);
@@ -164,8 +170,10 @@ namespace NINA.Plugins.PolarAlignment.Dockables {
 
         public class DummyService : IWindowService {
             protected Dispatcher dispatcher = Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
+#pragma warning disable CS0067 // members của interface IWindowService nhưng dummy service không dùng tới
             public event EventHandler OnDialogResultChanged;
             public event EventHandler OnClosed;
+#pragma warning restore CS0067
 
             public Task Close() {
                 return Task.CompletedTask;

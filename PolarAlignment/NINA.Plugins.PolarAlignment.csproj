@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net8.0-windows7.0</TargetFramework>
     <OutputType>Library</OutputType>
@@ -6,14 +6,21 @@
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <!-- CS0618: NINA vẫn expose contract RelayCommand/AsyncCommand (obsolete) mà plugin + NINA.Plugin deps
+         dùng có chủ đích; NU1701: package cũ (ToastNotifications/FreeImage) restore cho net8.0. Cả hai benign. -->
+    <NoWarn>$(NoWarn);CS0618;NU1701</NoWarn>
     <AssemblyTitle>Three Point Polar Alignment</AssemblyTitle>
     <Title>Three Point Polar Alignment</Title>
     <Authors>Stefan Berg @isbeorn</Authors>
     <Product>NINA.Plugins</Product>
-    <Description>This MLAstroRPA edition is a fork of the upstream Three Point Polar Alignment (TPPA) plugin</Description>
+    <Description>MLAstroRPA version: 2.0.0.5
+This MLAstroRPA edition is a fork of the upstream Three Point Polar Alignment (TPPA) plugin</Description>
     <Copyright>Copyright ©  2021-2025</Copyright>
     <Version>2.2.5.0</Version>
     <InformationalVersion>2.2.5.0</InformationalVersion>
+    <!-- Thư mục staging MSI của plugin MLAstro (sibling trong cùng nhánh Code): DLL TPPA được copy
+         vào đây sau mỗi build để sẵn sàng cho bước đóng gói MSI (Package.wxs harvest từ thư mục này). -->
+    <MLAstroMSIPluginDir>$(MSBuildProjectDirectory)\..\..\MLAstroRPA.NINA.Plugin\Installer\MSI\Plugin\Three Point Polar Alignment</MLAstroMSIPluginDir>
   </PropertyGroup>
   <ItemGroup>    
     <PackageReference Include="NINA.Plugin" Version="3.1.2.9001" />    
@@ -39,5 +46,14 @@
          Without this the copy below can fail with "file is being used by another process" when NINA was just running. -->
     <Exec IgnoreExitCode="true" Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;for ($i=0; $i -lt 50; $i++) { if (-not (Get-Process -Name NINA -ErrorAction SilentlyContinue)) { break }; Start-Sleep -Milliseconds 200 }&quot;" Condition="'$(ConfigurationName)' == 'Debug'" />
     <Exec IgnoreExitCode="true" Command="if $(ConfigurationName) == Debug (&#xD;&#xA;    &#xD;&#xA;if not exist &quot;%25localappdata%25\NINA\Plugins&quot; (&#xD;&#xA;    echo &quot;Creating Plugins %25localappdata%25\NINA\Plugins folder&quot;&#xD;&#xA;    mkdir  &quot;%25localappdata%25\NINA\Plugins&quot;&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;if exist &quot;%25localappdata%25\NINA\Plugins\3.0.0\Three Point Polar Alignment&quot; (&#xD;&#xA;    echo &quot; folder cleanup&quot;&#xD;&#xA;    rmdir &quot;%25localappdata%25\NINA\Plugins\3.0.0\Three Point Polar Alignment&quot; /S /Q&#xD;&#xA;)&#xD;&#xA;&#xD;&#xA;if not exist &quot;%25localappdata%25\NINA\Plugins\3.0.0\Three Point Polar Alignment&quot; (&#xD;&#xA;    echo &quot;Creating %25localappdata%25\NINA\Plugin\Three Point Polar Alignment folder&quot;&#xD;&#xA;    mkdir  &quot;%25localappdata%25\NINA\Plugins\3.0.0\Three Point Polar Alignment&quot;&#xD;&#xA;)&#xD;&#xA;echo &quot;Copying $(PlatformName) $(TargetFileName)&quot;&#xD;&#xA;copy &quot;$(TargetDir)$(TargetFileName)&quot; &quot;%25localappdata%25\NINA\Plugins\3.0.0\Three Point Polar Alignment\$(TargetName)$(TargetExt)&quot; /Y&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;)" />
+    <!-- Copy DLL sang thư mục staging MSI của plugin MLAstro (chạy mọi cấu hình). Chỉ chạy khi
+         project MLAstro plugin tồn tại cạnh bên để tránh tạo thư mục thừa ở checkout khác.
+         Dùng task MSBuild bản địa (MakeDir/Copy) thay vì cmd để tránh lỗi parse dấu nháy/&. -->
+    <MakeDir Directories="$(MLAstroMSIPluginDir)"
+             Condition="Exists('$(MSBuildProjectDirectory)\..\..\MLAstroRPA.NINA.Plugin\MLAstro_Robotic_Polar_Alignment.csproj')" />
+    <Copy SourceFiles="$(TargetDir)$(TargetFileName)"
+          DestinationFolder="$(MLAstroMSIPluginDir)"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(MSBuildProjectDirectory)\..\..\MLAstroRPA.NINA.Plugin\MLAstro_Robotic_Polar_Alignment.csproj')" />
   </Target>
 </Project>

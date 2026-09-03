@@ -163,6 +163,35 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
         {
             Logger.Info($"[MLAstroRPA-TestConnect] CLICKED {DateTime.Now:HH:mm:ss.fff}");
 
+            // 1) Ưu tiên dùng CHUNG cổng với plugin MLAstro (MLAstro là CHỦ cổng). Nếu MLAstro
+            //    đang giữ cổng, test qua nó - mở cổng trực tiếp ở đây sẽ bị "port in use".
+            var link = MLAstroLink.TryCreate();
+            if (link != null && link.IsConnected && !string.IsNullOrWhiteSpace(link.ConfiguredComPort))
+            {
+                TestConnectStatus = $"Checking {link.ConfiguredComPort} via MLAstro plugin...";
+                try
+                {
+                    var shared = new SharedMlastroSerial(link);
+                    shared.Open(); // BeginExternalControl - cổng MLAstro đã mở nên tức thì
+                    shared.WriteLine("?");
+                    var status = await ReadStatusViaSharedAsync(shared);
+                    shared.Close();
+                    if (!string.IsNullOrWhiteSpace(status))
+                    {
+                        TestConnectStatus = $"MLAstroRPA detected via MLAstro plugin on {link.ConfiguredComPort}. Status: {status}";
+                        Logger.Info($"[MLAstroRPA-TestConnect] Detected via MLAstro plugin on {link.ConfiguredComPort}. Status: {status}");
+                        return;
+                    }
+                    TestConnectStatus = $"MLAstro plugin connected but no valid status on {link.ConfiguredComPort}.";
+                    Logger.Error($"[MLAstroRPA-TestConnect] No valid status via MLAstro plugin on {link.ConfiguredComPort}.");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"[MLAstroRPA-TestConnect] Shared test via MLAstro failed: {ex.Message}");
+                }
+                // Không xác nhận được qua MLAstro thì thử scan trực tiếp bên dưới.
+            }
+
             var ports = SerialPort.GetPortNames().OrderBy(p => p).ToArray();
             var portsText = ports.Length == 0 ? "<none>" : string.Join(",", ports);
             Logger.Info($"[MLAstroRPA-TestConnect] Available ports: {portsText}");
@@ -248,6 +277,20 @@ namespace NINA.Plugins.PolarAlignment.MLAstroRPA
 
             TestConnectStatus = $"MLAstroRPA was not detected on any COM port. Scanned: {portsText}";
             Logger.Error($"[MLAstroRPA-TestConnect] MLAstroRPA was not detected on any COM port. Scanned: {portsText}");
+        }
+
+        private async Task<string> ReadStatusViaSharedAsync(SharedMlastroSerial shared)
+        {
+            var deadline = Environment.TickCount + 2000;
+            var sb = new System.Text.StringBuilder();
+            while (Environment.TickCount < deadline)
+            {
+                try { sb.Append(shared.ReadExisting()); } catch { }
+                var m = StatusRegex().Match(sb.ToString());
+                if (m.Success) return m.Value.Trim();
+                await Task.Delay(50);
+            }
+            return null;
         }
 
         [GeneratedRegex(@"<(?<status>[^|>]+)\|M[Pp]os:(?<x>[+-]?\d+(\.\d+)?),(?<y>[+-]?\d+(\.\d+)?)(,(?<z>[+-]?\d+(\.\d+)?))?\|")]
