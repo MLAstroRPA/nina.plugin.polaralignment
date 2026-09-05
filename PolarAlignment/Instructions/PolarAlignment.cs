@@ -596,6 +596,8 @@ namespace NINA.Plugins.PolarAlignment.Instructions {
                                     $"Azimuth Error: {Math.Round(TPAPAVM.PolarErrorDetermination.CurrentMountAxisAzimuthError.ArcMinutes, 2)}'. " +
                                     $"Total Error: {Math.Round(totalErrorMinutes, 2)}'. " +
                                     $"Automatically finishing polar alignment.");
+                                // Đóng hết các toast cũ trước khi hiện kết quả để thông báo hoàn tất luôn hiện rõ.
+                                Notification.CloseAll();
                                 Notification.ShowInformation(
                                     $"Total Error is below alignment tolerance.{Environment.NewLine}" +
                                     $"Tolerance: {AlignmentTolerance}{Environment.NewLine}'" +
