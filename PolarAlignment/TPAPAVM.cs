@@ -89,6 +89,23 @@ namespace NINA.Plugins.PolarAlignment {
         }
 
 
+        /// <summary>
+        /// Được gọi ngay khi polar alignment kết thúc (đạt dung sai / hủy / lỗi).
+        /// Dừng mọi spinner và ẩn dòng step đang hiển thị ("Adjust Altitude / Azimuth")
+        /// để panel chỉ còn giữ lại kết quả của lần chụp cuối cùng. Lần chạy kế tiếp
+        /// sẽ tạo một TPAPAVM mới nên không cần reset lại từ đây.
+        /// </summary>
+        public void FinishAlignment() {
+            foreach (var step in Steps) {
+                step.Active = false;
+                if (!step.Completed) {
+                    step.Relevant = false;
+                }
+            }
+            WaitingForUpdate = false;
+        }
+
+
 
         private SemaphoreSlim selectNewStarLock = new SemaphoreSlim(1);
         private SemaphoreSlim starDetectionLock = new SemaphoreSlim(1);

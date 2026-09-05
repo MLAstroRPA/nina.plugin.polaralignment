@@ -157,7 +157,11 @@ namespace NINA.Plugins.PolarAlignment.Dockables {
                 OptionsExpanded = true;
                 cameraMediator.ReleaseCaptureBlock(this);
                 externalProgress?.Report(GetStatus(string.Empty));
-                (PolarAlignment as Instructions.PolarAlignment).TPAPAVM = new TPAPAVM(profileService, weatherDataMediator);
+            
+                // show PA finished values
+                //(PolarAlignment as Instructions.PolarAlignment).TPAPAVM = new TPAPAVM(profileService, weatherDataMediator);
+                // hide "Adjust Altitude / Azimuth" message 
+                (PolarAlignment as Instructions.PolarAlignment).TPAPAVM?.FinishAlignment();
             }
             return false;
         }
