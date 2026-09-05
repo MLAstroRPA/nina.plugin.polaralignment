@@ -23,6 +23,7 @@ This MLAstroRPA edition is a fork of the upstream Three Point Polar Alignment (T
 
 ### Removed
 - Removed the **"Log polling data"** checkbox and the serial data logging feature (`LoggingSerialPort` no longer logs TX/RX data lines; only connection lifecycle is logged).
+- Removed the **UPAS** and **OAPA** entries from the polar alignment system selector — the options only offer **None** and **MLAstroRPA** now (this MLAstroRPA edition is focused on the MLAstro hardware).
 
 ### MLAstroRPA system integration
 - Added `MLAstroRPA` as a new polar alignment system option alongside None / UPAS / OAPA in the plugin settings ComboBox.
@@ -55,6 +56,20 @@ This MLAstroRPA edition is a fork of the upstream Three Point Polar Alignment (T
 ### UniversalPolarAlignmentBaseVM extensibility changes
 - Added virtual `TestConnectStatus` string property and `TestConnectCommand` relay command so subclasses (e.g. MLAstroRPA) can expose a lightweight connection test with a status message without reimplementing the full connect flow.
 - Added `Abort` relay command in the base VM that calls `upa.Abort(token)`, wired to both the UI and the automated adjustment flow.
+
+### Shared serial communication with the MLAstro plugin
+- The MLAstroRPA system now **shares the COM port owned by the MLAstro plugin** (running in the same NINA process) instead of opening the port itself. When the MLAstro plugin is not installed or loaded, TPPA falls back to scanning and opening the port directly as before.
+- Added `ISerialLink` as a common abstraction over the serial transport; `UniversalPolarAlignmentBase` now talks to an `ISerialLink` instead of a concrete `LoggingSerialPort`.
+- Added `MLAstroLink` — a runtime bridge to the MLAstro plugin's `SerialConnectionService` (found by assembly/type name; `TryCreate()` returns `null` when MLAstro is absent). It wraps connect/disconnect, send, external line / state / stop listeners, pause-query and begin/end external control.
+- Added `SharedMlastroSerial` — an `ISerialLink` implementation for the shared session: writes go through the MLAstro plugin (the port owner, using its write lock) and incoming lines are forwarded into an RX queue. Opening synchronizes with MLAstro (auto-open); closing releases external control so MLAstro resumes its `?` polling without closing the port.
+- `UniversalPolarAlignmentMLAstroRPA` and its VM now try the shared session first (`MLAstroLink.TryCreate()` → `SharedMlastroSerial`), and fall back to a direct COM scan when MLAstro is unavailable. When connected through the shared session the driver no longer sends `Disconnect` to the firmware — MLAstro remains the port owner.
+- `UniversalPolarAlignmentBase` gained `(bool deferOpen)` and `(ISerialLink openedPort)` constructors plus `AttachPort(...)` and `OpenAndValidate()` so a subclass can defer opening or attach an already-open shared transport.
+- Added `PolarAlignmentPlugin.RequestStopFromExternal(reason)` / `ExternalStopHandler` so an external plugin can stop the active alignment. When MLAstro raises STOP / E-STOP (or disconnects) mid-run, the driver aborts the in-progress move, the dockable VM cancels its routine, and the base VM auto-disconnects — with a single, cause-specific warning notification (no duplicate toasts).
+- Build: NINA is auto-closed before Debug builds, and the built TPPA DLL is copied into the sibling MLAstro plugin's MSI staging folder (`MLAstroMSIPluginDir`) after each build.
+
+### Other
+- Bumped the embedded MLAstroRPA version shown in the plugin description to **2.0.0.6**.
+- The polar alignment completion message now closes any previously open notifications first, so the "alignment finished" toast is always visible.
 
 ## Version 2.2.5.0
 - Replaced AAPA/Avalon checkboxes with a single ComboBox selector (None / UPAS / AAPA) per code review feedback
