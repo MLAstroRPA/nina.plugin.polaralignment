@@ -457,6 +457,102 @@ namespace NINA.Plugins.PolarAlignment.Properties {
 
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public float OAPAYBacklashCompensation {
+            get {
+                return ((float)(this["OAPAYBacklashCompensation"]));
+            }
+            set {
+                this["OAPAYBacklashCompensation"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public float OAPAXBacklashSplitLast {
+            get {
+                return ((float)(this["OAPAXBacklashSplitLast"]));
+            }
+            set {
+                this["OAPAXBacklashSplitLast"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public float OAPAYBacklashSplitLast {
+            get {
+                return ((float)(this["OAPAYBacklashSplitLast"]));
+            }
+            set {
+                this["OAPAYBacklashSplitLast"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Default")]
+        public string OAPAXGearRatioSource {
+            get {
+                return ((string)(this["OAPAXGearRatioSource"]));
+            }
+            set {
+                this["OAPAXGearRatioSource"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Default")]
+        public string OAPAYGearRatioSource {
+            get {
+                return ((string)(this["OAPAYGearRatioSource"]));
+            }
+            set {
+                this["OAPAYGearRatioSource"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Default")]
+        public string OAPAXBacklashSource {
+            get {
+                return ((string)(this["OAPAXBacklashSource"]));
+            }
+            set {
+                this["OAPAXBacklashSource"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Default")]
+        public string OAPAYBacklashSource {
+            get {
+                return ((string)(this["OAPAYBacklashSource"]));
+            }
+            set {
+                this["OAPAYBacklashSource"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string OAPALastPort {
+            get {
+                return ((string)(this["OAPALastPort"]));
+            }
+            set {
+                this["OAPALastPort"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool OAPAReverseAzimuth {
             get {
@@ -476,6 +572,30 @@ namespace NINA.Plugins.PolarAlignment.Properties {
             }
             set {
                 this["OAPAReverseAltitude"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Default")]
+        public string OAPAReverseAzimuthSource {
+            get {
+                return ((string)(this["OAPAReverseAzimuthSource"]));
+            }
+            set {
+                this["OAPAReverseAzimuthSource"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Default")]
+        public string OAPAReverseAltitudeSource {
+            get {
+                return ((string)(this["OAPAReverseAltitudeSource"]));
+            }
+            set {
+                this["OAPAReverseAltitudeSource"] = value;
             }
         }
 
@@ -524,6 +644,66 @@ namespace NINA.Plugins.PolarAlignment.Properties {
             }
             set {
                 this["OAPAYHoldPercent"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("16")]
+        public int OAPAXMicrosteps {
+            get {
+                return ((int)(this["OAPAXMicrosteps"]));
+            }
+            set {
+                this["OAPAXMicrosteps"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("16")]
+        public int OAPAYMicrosteps {
+            get {
+                return ((int)(this["OAPAYMicrosteps"]));
+            }
+            set {
+                this["OAPAYMicrosteps"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        public float OAPAXBacklashCompensationNegative {
+            get {
+                return ((float)(this["OAPAXBacklashCompensationNegative"]));
+            }
+            set {
+                this["OAPAXBacklashCompensationNegative"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        public float OAPAYBacklashCompensationNegative {
+            get {
+                return ((float)(this["OAPAYBacklashCompensationNegative"]));
+            }
+            set {
+                this["OAPAYBacklashCompensationNegative"] = value;
+            }
+        }
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int OAPABacklashPairSchema {
+            get {
+                return ((int)(this["OAPABacklashPairSchema"]));
+            }
+            set {
+                this["OAPABacklashPairSchema"] = value;
             }
         }
     }
